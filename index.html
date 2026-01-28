@@ -13,7 +13,9 @@
     --btn-gray:#a5a5a5;
     --btn-accent:#ff9f0a;
     --neg:#ff3b30;
-    --scroll:#cfcfcf; /* ★ ダークモードでも見える明るいスクロールバー */
+
+    /* ★ iPhoneダークモードでも見えるスクロールバー色 */
+    --scroll:#e6e6e6;
   }
 
   html,body{
@@ -41,7 +43,7 @@
     box-sizing:border-box;
   }
 
-  /* ★ 履歴：文字さらに大きく・行間限界まで詰める */
+  /* ★ 履歴：文字大きく・行間限界まで詰める */
   .history{
     background:var(--panel);
     backdrop-filter:blur(8px);
@@ -50,21 +52,26 @@
     padding:12px;
     border-radius:14px;
     overflow:auto;
-    font-size:26px;     /* ★ 大きい文字 */
-    line-height:1.00;   /* ★ 行間ほぼゼロ（限界） */
+    font-size:26px;
+    line-height:1.00;
   }
 
-  /* ★ スクロールバーを明るくしてダークモードでも見えるように */
+  /* ★ iPhoneダークモードでも見えるスクロールバー */
   .history::-webkit-scrollbar{
-    width:6px;
+    width:8px; /* iPhoneで見やすい太さ */
   }
   .history::-webkit-scrollbar-thumb{
-    background:var(--scroll); /* ★ 明るい色で視認性UP */
-    border-radius:3px;
+    background:var(--scroll);
+    border-radius:6px;
+    border:2px solid transparent; /* iOSで視認性UP */
+    background-clip:padding-box;
+  }
+  .history::-webkit-scrollbar-track{
+    background:rgba(255,255,255,0.15);
   }
 
   .history-line{
-    padding:1px 4px;    /* ★ 最小余白 */
+    padding:1px 4px;
     border-radius:4px;
     display:flex;
     justify-content:space-between;
@@ -96,16 +103,16 @@
     color:#ffb347;
   }
 
-  /* ★ 合計表示も履歴と同じフォントサイズに統一 */
+  /* ★ 合計も履歴と同じフォントサイズに統一 */
   .total-box{
     background:rgba(255,255,255,0.10);
     backdrop-filter:blur(6px);
     color:#fff;
     padding:12px 16px;
     border-radius:12px;
-    font-size:26px;   /* ★ 履歴と同じサイズ */
+    font-size:26px;
     text-align:right;
-    line-height:1.00; /* ★ 行間も合わせる */
+    line-height:1.00;
   }
 
   /* ボタンエリア */
