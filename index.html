@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8" />
-<title>スマホ対応 iPhone風電卓（メリハリ強化版）</title>
+<title>スマホ対応 iPhone風電卓（視認性MAX版）</title>
 <meta name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
@@ -18,9 +18,9 @@
     --scroll:#dcdcdc;
     --scroll-track:#555;
 
-    /* ★ 行ごと背景色（メリハリ強化） */
+    /* ★ 行ごと背景色（視認性MAX） */
     --row-a: transparent;
-    --row-b: rgba(255,255,255,0.14); /* ← 前より濃くして視認性UP */
+    --row-b: rgba(255,255,255,0.22); /* ← さらに濃くして視認性UP */
   }
 
   html,body{
@@ -74,9 +74,9 @@
     background:var(--scroll-track);
   }
 
-  /* ★ 行ごとに背景色を交互に（メリハリ強化） */
+  /* ★ 行ごとに背景色を交互に（視認性MAX） */
   .history-line{
-    padding:1px 4px;
+    padding:4px 6px;
     border-radius:4px;
     display:flex;
     justify-content:space-between;
@@ -86,15 +86,17 @@
     overflow:hidden;
     text-overflow:ellipsis;
     user-select:none;
-    background:var(--row-a);
+
+    /* ★ 行の上下に薄い仕切り線を追加 */
+    border-bottom:1px solid rgba(255,255,255,0.18);
   }
 
   .history-line:nth-child(even){
-    background:var(--row-b); /* ← 濃くして視認性UP */
+    background:var(--row-b); /* ← さらに濃くして視認性UP */
   }
 
   .history-line:active{
-    background:rgba(255,255,255,0.22); /* ← タップ時もメリハリ強化 */
+    background:rgba(255,255,255,0.30); /* ← タップ時も強調 */
   }
 
   .negative{color:var(--neg)}
