@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8" />
-<title>スマホ対応 iPhone風電卓（完全版）</title>
+<title>スマホ対応 iPhone風電卓（履歴最大視認性版）</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
 
 <style>
@@ -13,6 +13,7 @@
     --btn-gray:#a5a5a5;
     --btn-accent:#ff9f0a;
     --neg:#ff3b30;
+    --scroll:#cfcfcf; /* ★ ダークモードでも見える明るいスクロールバー */
   }
 
   html,body{
@@ -40,7 +41,7 @@
     box-sizing:border-box;
   }
 
-  /* ★ 履歴：文字大きく・行間極限まで詰める */
+  /* ★ 履歴：文字さらに大きく・行間限界まで詰める */
   .history{
     background:var(--panel);
     backdrop-filter:blur(8px);
@@ -49,21 +50,22 @@
     padding:12px;
     border-radius:14px;
     overflow:auto;
-    font-size:24px;     /* ★ 大きい文字 */
-    line-height:1.02;   /* ★ 行間ほぼゼロ */
+    font-size:26px;     /* ★ 大きい文字 */
+    line-height:1.00;   /* ★ 行間ほぼゼロ（限界） */
   }
 
+  /* ★ スクロールバーを明るくしてダークモードでも見えるように */
   .history::-webkit-scrollbar{
-    width:4px;
+    width:6px;
   }
   .history::-webkit-scrollbar-thumb{
-    background:#444;
+    background:var(--scroll); /* ★ 明るい色で視認性UP */
     border-radius:3px;
   }
 
   .history-line{
-    padding:2px 4px;    /* ★ 行間を詰めるため最小化 */
-    border-radius:6px;
+    padding:1px 4px;    /* ★ 最小余白 */
+    border-radius:4px;
     display:flex;
     justify-content:space-between;
     align-items:center;
@@ -80,10 +82,10 @@
 
   .negative{color:var(--neg)}
 
-  /* ★ 削除 × ボタン（オレンジ＋太字） */
+  /* 削除 × ボタン（オレンジ＋太字） */
   .delete-btn{
     color:var(--btn-accent);
-    font-size:26px;
+    font-size:28px;
     font-weight:700;
     cursor:pointer;
     padding:0 8px;
@@ -94,15 +96,16 @@
     color:#ffb347;
   }
 
-  /* 合計表示枠 */
+  /* ★ 合計表示も履歴と同じフォントサイズに統一 */
   .total-box{
     background:rgba(255,255,255,0.10);
     backdrop-filter:blur(6px);
     color:#fff;
     padding:12px 16px;
     border-radius:12px;
-    font-size:22px;
+    font-size:26px;   /* ★ 履歴と同じサイズ */
     text-align:right;
+    line-height:1.00; /* ★ 行間も合わせる */
   }
 
   /* ボタンエリア */
@@ -112,7 +115,7 @@
     gap:12px;
   }
 
-  /* ★ ボタンアニメーション強化 */
+  /* ボタンアニメーション強化 */
   button{
     height:64px;
     border-radius:32px;
@@ -141,8 +144,8 @@
   .zero{grid-column:span 2;text-align:left;padding-left:28px}
 
   @media (max-width:480px){
-    .history{font-size:22px;}
-    .total-box{font-size:20px;}
+    .history{font-size:24px;}
+    .total-box{font-size:24px;}
     button{height:60px;font-size:26px;}
   }
 </style>
