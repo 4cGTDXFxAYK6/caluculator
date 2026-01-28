@@ -11,11 +11,8 @@
     --panel:rgba(255,255,255,0.06);
     --btn-dark:#333;
     --btn-gray:#a5a5a5;
-    --btn-accent:#ff9f0a;
+    --btn-accent:#ff9f0a; /* ★ オレンジ（×と同じ） */
     --neg:#ff3b30;
-
-    /* ★ iPhoneダークモードでも見えるスクロールバー色 */
-    --scroll:#e6e6e6;
   }
 
   html,body{
@@ -56,18 +53,18 @@
     line-height:1.00;
   }
 
-  /* ★ iPhoneダークモードでも見えるスクロールバー */
+  /* ★ スクロールバーを × と同じオレンジ色に統一 */
   .history::-webkit-scrollbar{
-    width:8px; /* iPhoneで見やすい太さ */
+    width:8px;
   }
   .history::-webkit-scrollbar-thumb{
-    background:var(--scroll);
+    background:var(--btn-accent); /* ★ オレンジ */
     border-radius:6px;
-    border:2px solid transparent; /* iOSで視認性UP */
+    border:2px solid transparent;
     background-clip:padding-box;
   }
   .history::-webkit-scrollbar-track{
-    background:rgba(255,255,255,0.15);
+    background:rgba(255,255,255,0.18); /* ダークモードでも見える */
   }
 
   .history-line{
