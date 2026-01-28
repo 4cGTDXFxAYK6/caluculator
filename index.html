@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<title>スマホ対応 iPhone風電卓（完全版）</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+
+<style>
+  :root{
+    --bg:#000;
+    --panel:rgba(255,255,255,0.06);
+    --btn-dark:#333;
+    --btn-gray:#a5a5a5;
+    --btn-accent:#ff9f0a;
+    --neg:#ff3b30;
+  }
+
+  html,body{
+    height:100%;
+    margin:0;
+    background:var(--bg);
+    font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+                 "Helvetica Neue", Arial, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .calculator{
+    width:100%;
+    max-width:360px;
+    padding:16px;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    box-sizing:border-box;
+  }
+
+  /* 履歴枠（スマホ向けに高さ調整） */
+  .history{
+    background:var(--panel);
+    backdrop-filter:blur(8px);
+    color:#eee;
+    height:32vh;
+    padding:12px;
+    border-radius:14px;
+    overflow:auto;
+    font-size:20px;
+    line-height:1.1;
+  }
+
+  .history::-webkit-scrollbar{
+    width:4px;
+  }
+  .history::-webkit-scrollbar-thumb{
+    background:#444;
+    border-radius:3px;
+  }
+
+  .history-line{
+    padding:4px 4px;
+    border-radius:6px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    user-select:none;
+    line-height:1.1;
+  }
+
+  .history-line:active{
+    background:rgba(255,255,255,0.12);
+  }
+
+  .negative{color:var(--neg)}
+
+  /* 削除 × ボタン（スマホでも押しやすく） */
+  .delete-btn{
+    color:var(--btn-accent);
+    font-size:24px;
+    font-weight:700;
+    cursor:pointer;
+    padding:0 8px;
+    user-select:none;
+  }
+
+  .delete-btn:active{
+    color:#ffb347;
+  }
+
+  /* 合計表示枠 */
+  .total-box{
+    background:rgba(255,255,255,0.10);
+    backdrop-filter:blur(6px);
+    color:#fff;
+    padding:12px 16px;
+    border-radius:12px;
+    font-size:22px;
+    text-align:right;
+  }
+
+  /* ボタンエリア（スマホ向けに高さ調整） */
+  .keys{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:12px;
+  }
+
+  button{
+    height:64px;
+    border-radius:32px;
+    border:none;
+    font-size:26px;
+    color:#fff;
+    cursor:pointer;
+    transition:transform .08s,filter .08s;
+    user-select:none;
+    font-family:inherit;
+  }
+
+  button:active{
+    transform:scale(.92);
+    filter:brightness(1.35);
+  }
+
+  .gray{background:var(--btn-gray);color:#000}
+  .dark{background:var(--btn-dark)}
+  .orange{background:var(--btn-accent)}
+  .zero{grid-column:span 2;text-align:left;padding-left:28px}
+
+  /* スマホ向け微調整 */
+  @media (max-width:480px){
+    .history{font-size:18px;}
+    .total-box{font-size:20px;}
+    button{height:60px;font-size:24px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="calculator">
+
+  <div id="history" class="history"></div>
+
+  <div id="totalBox" class="total-box">合計: 0</div>
+
+  <div class="keys">
+    <button class="gray" data-value="DEL">⌫</button>
+    <button class="gray" data-value="AC">AC</button>
+    <button class="gray" data-value="%">%</button>
+    <button class="orange" data-value="/">÷</button>
+
+    <button class="dark" data-value="7">7</button>
+    <button class="dark" data-value="8">8</button>
+    <button class="dark" data-value="9">9</button>
+    <button class="orange" data-value="*">×</button>
+
+    <button class="dark" data-value="4">4</button>
+    <button class="dark" data-value="5">5</button>
+    <button class="dark" data-value="6">6</button>
+    <button class="orange" data-value="-">-</button>
+
+    <button class="dark" data-value="1">1</button>
+    <button class="dark" data-value="2">2</button>
+    <button class="dark" data-value="3">3</button>
+    <button class="orange" data-value="+">+</button>
+
+    <button class="dark zero" data-value="0">0</button>
+    <button class="dark" data-value=".">.</button>
+    <button class="orange" data-value="=">=</button>
+  </div>
+</div>
+
+<script>
+const historyPanel = document.getElementById("history");
+const totalBox = document.getElementById("totalBox");
+const keys = document.querySelector(".keys");
+
+let current = "";
+let previous = "";
+let operator = null;
+let justCalculated = false;
+
+const toFull = s =>
+  s.replace(/\*/g,"×")
+   .replace(/\//g,"÷");
+
+function updateTotal(){
+  let sum = 0;
+  const lines = historyPanel.querySelectorAll('.history-line[data-type="history"]');
+
+  lines.forEach(line=>{
+    const text = line.querySelector(".text").textContent;
+    const result = text.split("=").pop().trim();
+    const num = Number(result);
+    if(!isNaN(num)) sum += num;
+  });
+
+  totalBox.textContent = "合計: " + sum;
+}
+
+function updateInputLine(){
+  let last = historyPanel.lastElementChild;
+
+  if(!last || last.dataset.type !== "input"){
+    last = document.createElement("div");
+    last.className = "history-line";
+    last.dataset.type = "input";
+
+    const text = document.createElement("span");
+    text.className = "text";
+    last.appendChild(text);
+
+    historyPanel.appendChild(last);
+  }
+
+  const text = last.querySelector(".text");
+
+  let expr = "";
+  if(previous && operator) expr = toFull(previous + " " + operator + " " + current);
+  else expr = toFull(current || "0");
+
+  text.textContent = expr;
+  historyPanel.scrollTop = historyPanel.scrollHeight;
+}
+
+function finalizeToHistory(expr, result){
+  let line = historyPanel.lastElementChild;
+
+  if(!line || line.dataset.type !== "input"){
+    line = document.createElement("div");
+    line.className = "history-line";
+    historyPanel.appendChild(line);
+  }
+
+  line.dataset.type = "history";
+  line.innerHTML = `
+    <span class="text">${toFull(expr)} = ${result}</span>
+    <span class="delete-btn">×</span>
+  `;
+
+  if(Number(result) < 0) line.querySelector(".text").classList.add("negative");
+
+  historyPanel.scrollTop = historyPanel.scrollHeight;
+
+  updateTotal();
+}
+
+function resetAll(){
+  current = "";
+  previous = "";
+  operator = null;
+  justCalculated = false;
+  historyPanel.innerHTML = "";
+  updateInputLine();
+  updateTotal();
+}
+
+function calculate(){
+  if(!operator && current !== ""){
+    const expr = current;
+    const result = current;
+    finalizeToHistory(expr, result);
+
+    current = "";
+    previous = "";
+    operator = null;
+    justCalculated = true;
+
+    updateInputLine();
+    return;
+  }
+
+  if(operator && previous !== "" && current !== ""){
+    const expr = previous + operator + current;
+    const result = String(eval(expr));
+
+    finalizeToHistory(expr, result);
+
+    current = "";
+    previous = "";
+    operator = null;
+    justCalculated = true;
+
+    updateInputLine();
+  }
+}
+
+function handleInput(value){
+  if(justCalculated){
+    if(!isNaN(value) || value === ".") current = "";
+    justCalculated = false;
+  }
+
+  if(value === "AC"){
+    resetAll();
+    return;
+  }
+
+  if(value === "DEL"){
+    current = current.slice(0,-1);
+    updateInputLine();
+    return;
+  }
+
+  if(value === "%"){
+    current = String(Number(current)/100);
+    updateInputLine();
+    return;
+  }
+
+  if(["+","-","*","/"].includes(value)){
+    operator = value;
+    previous = current;
+    current = "";
+    updateInputLine();
+    return;
+  }
+
+  if(value === "="){
+    calculate();
+    return;
+  }
+
+  current += value;
+  updateInputLine();
+}
+
+historyPanel.addEventListener("click", e=>{
+  if(e.target.classList.contains("delete-btn")){
+    e.target.parentElement.remove();
+    updateTotal();
+    return;
+  }
+});
+
+keys.addEventListener("click", e=>{
+  const btn = e.target.closest("button");
+  if(!btn) return;
+
+  const val = btn.dataset.value;
+  btn.classList.add("active");
+  setTimeout(()=>btn.classList.remove("active"),120);
+
+  handleInput(val);
+});
+
+updateInputLine();
+updateTotal();
+</script>
+
+</body>
+</html>
