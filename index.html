@@ -53,9 +53,9 @@
     line-height:1.00;
   }
 
-  /* ★ スクロールバーを × と同じオレンジ色に統一 */
+  /* ★ スクロールバーを × と同じオレンジ色に統一（見やすさ優先） */
   .history::-webkit-scrollbar{
-    width:8px;
+    width:8px; /* 太めで視認性UP */
   }
   .history::-webkit-scrollbar-thumb{
     background:var(--btn-accent); /* ★ オレンジ */
@@ -64,7 +64,7 @@
     background-clip:padding-box;
   }
   .history::-webkit-scrollbar-track{
-    background:rgba(255,255,255,0.18); /* ダークモードでも見える */
+    background:rgba(255,255,255,0.22); /* iPhoneダークモードでも見える */
   }
 
   .history-line{
