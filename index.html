@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8" />
-<title>スマホ対応 iPhone風電卓（視認性MAX版）</title>
+<title>スマホ対応 iPhone風電卓（背景色変化版）</title>
 <meta name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
@@ -11,16 +11,18 @@
     --bg:#000;
     --panel:rgba(255,255,255,0.06);
     --btn-dark:#333;
+    --btn-dark-active:#555;        /* ★ 押した時の色（iPhone風） */
     --btn-gray:#a5a5a5;
+    --btn-gray-active:#ddd;        /* ★ 押した時の色 */
     --btn-accent:#ff9f0a;
+    --btn-accent-active:#ffb347;   /* ★ 押した時の色（iPhone風） */
     --neg:#ff3b30;
 
     --scroll:#dcdcdc;
     --scroll-track:#555;
 
-    /* ★ 行ごと背景色（視認性MAX） */
     --row-a: transparent;
-    --row-b: rgba(255,255,255,0.22); /* ← さらに濃くして視認性UP */
+    --row-b: rgba(255,255,255,0.22);
   }
 
   html,body{
@@ -49,7 +51,7 @@
     box-sizing:border-box;
   }
 
-  /* 履歴（大きい文字・行間詰め） */
+  /* 履歴 */
   .history{
     background:var(--panel);
     backdrop-filter:blur(8px);
@@ -62,19 +64,10 @@
     line-height:1.00;
   }
 
-  /* スクロールバー（iPhoneで見える安定版） */
-  .history::-webkit-scrollbar{
-    width:6px;
-  }
-  .history::-webkit-scrollbar-thumb{
-    background:var(--scroll);
-    border-radius:4px;
-  }
-  .history::-webkit-scrollbar-track{
-    background:var(--scroll-track);
-  }
+  .history::-webkit-scrollbar{ width:6px; }
+  .history::-webkit-scrollbar-thumb{ background:var(--scroll); border-radius:4px; }
+  .history::-webkit-scrollbar-track{ background:var(--scroll-track); }
 
-  /* ★ 行ごとに背景色を交互に（視認性MAX） */
   .history-line{
     padding:4px 6px;
     border-radius:4px;
@@ -86,22 +79,13 @@
     overflow:hidden;
     text-overflow:ellipsis;
     user-select:none;
-
-    /* ★ 行の上下に薄い仕切り線を追加 */
     border-bottom:1px solid rgba(255,255,255,0.18);
   }
-
-  .history-line:nth-child(even){
-    background:var(--row-b); /* ← さらに濃くして視認性UP */
-  }
-
-  .history-line:active{
-    background:rgba(255,255,255,0.30); /* ← タップ時も強調 */
-  }
+  .history-line:nth-child(even){ background:var(--row-b); }
+  .history-line:active{ background:rgba(255,255,255,0.30); }
 
   .negative{color:var(--neg)}
 
-  /* 削除 × ボタン */
   .delete-btn{
     color:var(--btn-accent);
     font-size:28px;
@@ -110,12 +94,8 @@
     padding:0 8px;
     user-select:none;
   }
+  .delete-btn:active{ color:#ffb347; }
 
-  .delete-btn:active{
-    color:#ffb347;
-  }
-
-  /* 合計表示 */
   .total-box{
     background:rgba(255,255,255,0.10);
     backdrop-filter:blur(6px);
@@ -127,14 +107,13 @@
     line-height:1.00;
   }
 
-  /* ボタンエリア */
   .keys{
     display:grid;
     grid-template-columns:repeat(4,1fr);
     gap:12px;
   }
 
-  /* ボタン（ダブルタップ防止 + アニメ強化） */
+  /* ★ iPhone電卓風：背景色が変わる押下アニメーション */
   button{
     height:64px;
     border-radius:32px;
@@ -147,21 +126,21 @@
     touch-action: manipulation;
 
     transition:
-      transform 0.08s cubic-bezier(.25,.46,.45,.94),
-      filter 0.08s,
-      box-shadow 0.12s;
+      background-color 0.12s ease,
+      filter 0.12s ease;
   }
 
-  button:active{
-    transform:scale(.88);
-    filter:brightness(1.45);
-    box-shadow:0 0 18px #ff9f0a88;
-  }
+  /* 通常色 */
+  .gray{ background:var(--btn-gray); color:#000; }
+  .dark{ background:var(--btn-dark); }
+  .orange{ background:var(--btn-accent); }
 
-  .gray{background:var(--btn-gray);color:#000}
-  .dark{background:var(--btn-dark)}
-  .orange{background:var(--btn-accent)}
-  .zero{grid-column:span 2;text-align:left;padding-left:28px}
+  /* ★ 押した時の色（iPhone電卓と同じ挙動） */
+  .gray:active{ background:var(--btn-gray-active); }
+  .dark:active{ background:var(--btn-dark-active); }
+  .orange:active{ background:var(--btn-accent-active); }
+
+  .zero{ grid-column:span 2; text-align:left; padding-left:28px; }
 
   @media (max-width:480px){
     .history{font-size:24px;}
@@ -373,8 +352,6 @@ keys.addEventListener("click", e=>{
   if(!btn) return;
 
   const val = btn.dataset.value;
-  btn.classList.add("active");
-  setTimeout(()=>btn.classList.remove("active"),120);
 
   handleInput(val);
 });
