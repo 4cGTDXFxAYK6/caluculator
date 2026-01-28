@@ -40,7 +40,7 @@
     box-sizing:border-box;
   }
 
-  /* 履歴枠（スマホ向けに高さ調整） */
+  /* 履歴枠（文字大きく・行間狭く） */
   .history{
     background:var(--panel);
     backdrop-filter:blur(8px);
@@ -49,8 +49,8 @@
     padding:12px;
     border-radius:14px;
     overflow:auto;
-    font-size:20px;
-    line-height:1.1;
+    font-size:22px;     /* ★ 文字大きく */
+    line-height:1.05;   /* ★ 行間さらに狭く */
   }
 
   .history::-webkit-scrollbar{
@@ -62,7 +62,7 @@
   }
 
   .history-line{
-    padding:4px 4px;
+    padding:3px 4px;    /* ★ 行間をさらに詰める */
     border-radius:6px;
     display:flex;
     justify-content:space-between;
@@ -72,7 +72,6 @@
     overflow:hidden;
     text-overflow:ellipsis;
     user-select:none;
-    line-height:1.1;
   }
 
   .history-line:active{
@@ -81,10 +80,10 @@
 
   .negative{color:var(--neg)}
 
-  /* 削除 × ボタン（スマホでも押しやすく） */
+  /* 削除 × ボタン（オレンジ＋太字） */
   .delete-btn{
     color:var(--btn-accent);
-    font-size:24px;
+    font-size:26px;
     font-weight:700;
     cursor:pointer;
     padding:0 8px;
@@ -106,28 +105,35 @@
     text-align:right;
   }
 
-  /* ボタンエリア（スマホ向けに高さ調整） */
+  /* ボタンエリア */
   .keys{
     display:grid;
     grid-template-columns:repeat(4,1fr);
     gap:12px;
   }
 
+  /* ★ ボタンアニメーション強化 */
   button{
     height:64px;
     border-radius:32px;
     border:none;
-    font-size:26px;
+    font-size:28px;
     color:#fff;
     cursor:pointer;
-    transition:transform .08s,filter .08s;
     user-select:none;
     font-family:inherit;
+
+    /* アニメーション強化 */
+    transition:
+      transform 0.08s cubic-bezier(.25,.46,.45,.94),
+      filter 0.08s,
+      box-shadow 0.12s;
   }
 
   button:active{
-    transform:scale(.92);
-    filter:brightness(1.35);
+    transform:scale(.88);          /* ★ もっと縮む */
+    filter:brightness(1.45);       /* ★ 光る */
+    box-shadow:0 0 18px #ff9f0a88; /* ★ 発光エフェクト */
   }
 
   .gray{background:var(--btn-gray);color:#000}
@@ -135,11 +141,10 @@
   .orange{background:var(--btn-accent)}
   .zero{grid-column:span 2;text-align:left;padding-left:28px}
 
-  /* スマホ向け微調整 */
   @media (max-width:480px){
-    .history{font-size:18px;}
+    .history{font-size:20px;}
     .total-box{font-size:20px;}
-    button{height:60px;font-size:24px;}
+    button{height:60px;font-size:26px;}
   }
 </style>
 </head>
