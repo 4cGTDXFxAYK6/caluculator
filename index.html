@@ -2,8 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8" />
-<title>スマホ対応 iPhone風電卓（安定スクロールバー版）</title>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>スマホ対応 iPhone風電卓（ダブルタップ防止版）</title>
+
+<!-- ★ iPhone のダブルタップ拡大を完全に無効化 -->
+<meta name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
 <style>
   :root{
@@ -13,8 +16,6 @@
     --btn-gray:#a5a5a5;
     --btn-accent:#ff9f0a;
     --neg:#ff3b30;
-
-    /* ★ iPhoneでも確実に見えるスクロールバー色 */
     --scroll:#dcdcdc;
     --scroll-track:#555;
   }
@@ -25,7 +26,10 @@
     background:var(--bg);
     font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
                  "Helvetica Neue", Arial, sans-serif;
-    -webkit-tap-highlight-color: transparent;
+
+    /* ★ iPhone のダブルタップ拡大を防ぐ */
+    touch-action: manipulation;
+    -webkit-touch-callout: none;
   }
 
   body{
@@ -44,7 +48,7 @@
     box-sizing:border-box;
   }
 
-  /* ★ 履歴：文字大きく・行間限界まで詰める */
+  /* 履歴（大きい文字・行間詰め） */
   .history{
     background:var(--panel);
     backdrop-filter:blur(8px);
@@ -57,16 +61,16 @@
     line-height:1.00;
   }
 
-  /* ★ A方式：iPhoneで最も安定して見える細いスクロールバー */
+  /* ★ iPhone で確実に見える細いスクロールバー */
   .history::-webkit-scrollbar{
-    width:6px; /* 細め → iOSで枠内に収まる */
+    width:6px;
   }
   .history::-webkit-scrollbar-thumb{
-    background:var(--scroll); /* 明るいグレーで視認性UP */
+    background:var(--scroll);
     border-radius:4px;
   }
   .history::-webkit-scrollbar-track{
-    background:var(--scroll-track); /* コントラスト確保 */
+    background:var(--scroll-track);
   }
 
   .history-line{
@@ -88,7 +92,7 @@
 
   .negative{color:var(--neg)}
 
-  /* 削除 × ボタン（オレンジ＋太字） */
+  /* 削除 × ボタン */
   .delete-btn{
     color:var(--btn-accent);
     font-size:28px;
@@ -102,7 +106,7 @@
     color:#ffb347;
   }
 
-  /* ★ 合計も履歴と同じフォントサイズに統一 */
+  /* 合計表示 */
   .total-box{
     background:rgba(255,255,255,0.10);
     backdrop-filter:blur(6px);
@@ -121,7 +125,7 @@
     gap:12px;
   }
 
-  /* ボタンアニメーション強化 */
+  /* ★ ボタン：ダブルタップ拡大防止 + アニメ強化 */
   button{
     height:64px;
     border-radius:32px;
@@ -131,6 +135,9 @@
     cursor:pointer;
     user-select:none;
     font-family:inherit;
+
+    /* ★ iPhone のダブルタップ拡大を防ぐ */
+    touch-action: manipulation;
 
     transition:
       transform 0.08s cubic-bezier(.25,.46,.45,.94),
