@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8" />
-<title>スマホ対応 iPhone風電卓（行ごと視認性UP版）</title>
+<title>スマホ対応 iPhone風電卓（メリハリ強化版）</title>
 <meta name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
@@ -18,9 +18,9 @@
     --scroll:#dcdcdc;
     --scroll-track:#555;
 
-    /* ★ 行ごと背景色（交互） */
+    /* ★ 行ごと背景色（メリハリ強化） */
     --row-a: transparent;
-    --row-b: rgba(255,255,255,0.08);
+    --row-b: rgba(255,255,255,0.14); /* ← 前より濃くして視認性UP */
   }
 
   html,body{
@@ -74,7 +74,7 @@
     background:var(--scroll-track);
   }
 
-  /* ★ 行ごとに背景色を交互に */
+  /* ★ 行ごとに背景色を交互に（メリハリ強化） */
   .history-line{
     padding:1px 4px;
     border-radius:4px;
@@ -86,15 +86,15 @@
     overflow:hidden;
     text-overflow:ellipsis;
     user-select:none;
+    background:var(--row-a);
   }
 
-  /* 偶数行に背景色 */
   .history-line:nth-child(even){
-    background:var(--row-b);
+    background:var(--row-b); /* ← 濃くして視認性UP */
   }
 
   .history-line:active{
-    background:rgba(255,255,255,0.18);
+    background:rgba(255,255,255,0.22); /* ← タップ時もメリハリ強化 */
   }
 
   .negative{color:var(--neg)}
