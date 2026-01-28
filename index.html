@@ -40,7 +40,7 @@
     box-sizing:border-box;
   }
 
-  /* 履歴枠（文字大きく・行間狭く） */
+  /* ★ 履歴：文字大きく・行間極限まで詰める */
   .history{
     background:var(--panel);
     backdrop-filter:blur(8px);
@@ -49,8 +49,8 @@
     padding:12px;
     border-radius:14px;
     overflow:auto;
-    font-size:22px;     /* ★ 文字大きく */
-    line-height:1.05;   /* ★ 行間さらに狭く */
+    font-size:24px;     /* ★ 大きい文字 */
+    line-height:1.02;   /* ★ 行間ほぼゼロ */
   }
 
   .history::-webkit-scrollbar{
@@ -62,7 +62,7 @@
   }
 
   .history-line{
-    padding:3px 4px;    /* ★ 行間をさらに詰める */
+    padding:2px 4px;    /* ★ 行間を詰めるため最小化 */
     border-radius:6px;
     display:flex;
     justify-content:space-between;
@@ -80,7 +80,7 @@
 
   .negative{color:var(--neg)}
 
-  /* 削除 × ボタン（オレンジ＋太字） */
+  /* ★ 削除 × ボタン（オレンジ＋太字） */
   .delete-btn{
     color:var(--btn-accent);
     font-size:26px;
@@ -123,7 +123,6 @@
     user-select:none;
     font-family:inherit;
 
-    /* アニメーション強化 */
     transition:
       transform 0.08s cubic-bezier(.25,.46,.45,.94),
       filter 0.08s,
@@ -131,9 +130,9 @@
   }
 
   button:active{
-    transform:scale(.88);          /* ★ もっと縮む */
-    filter:brightness(1.45);       /* ★ 光る */
-    box-shadow:0 0 18px #ff9f0a88; /* ★ 発光エフェクト */
+    transform:scale(.88);
+    filter:brightness(1.45);
+    box-shadow:0 0 18px #ff9f0a88;
   }
 
   .gray{background:var(--btn-gray);color:#000}
@@ -142,7 +141,7 @@
   .zero{grid-column:span 2;text-align:left;padding-left:28px}
 
   @media (max-width:480px){
-    .history{font-size:20px;}
+    .history{font-size:22px;}
     .total-box{font-size:20px;}
     button{height:60px;font-size:26px;}
   }
