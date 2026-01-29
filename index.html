@@ -2,9 +2,13 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8" />
-<title>スマホ対応 iPhone風電卓（Ripple本格修正版＋数字のみ履歴）</title>
+<title>履歴付き電卓</title>
 <meta name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#000000">
 
 <style>
   :root{
@@ -48,7 +52,6 @@
     box-sizing:border-box;
   }
 
-  /* 履歴 */
   .history{
     background:var(--panel);
     backdrop-filter:blur(8px);
@@ -110,7 +113,6 @@
     gap:12px;
   }
 
-  /* Ripple（波紋）本格修正版 */
   button{
     position:relative;
     overflow:hidden;
@@ -123,7 +125,6 @@
     user-select:none;
     font-family:inherit;
     touch-action: manipulation;
-
     transition:
       transform 0.08s cubic-bezier(.25,.46,.45,.94),
       filter 0.08s;
@@ -251,7 +252,6 @@ function updateInputLine(){
   historyPanel.scrollTop = historyPanel.scrollHeight;
 }
 
-/* ★ finalizeToHistory：数字だけの場合は = を付けない */
 function finalizeToHistory(expr, result, isSingleNumber = false){
   let line = historyPanel.lastElementChild;
 
@@ -291,10 +291,9 @@ function resetAll(){
   updateTotal();
 }
 
-/* ★ calculate：数字だけの＝は数字だけ履歴に追加 */
 function calculate(){
   if(!operator && current !== ""){
-    finalizeToHistory(current, current, true); // ← 数字だけ
+    finalizeToHistory(current, current, true);
     current = "";
     previous = "";
     operator = null;
@@ -358,15 +357,18 @@ function handleInput(value){
   updateInputLine();
 }
 
-/* Ripple（波紋）本格修正版 */
 function createRipple(e){
   const btn = e.target.closest("button");
   if(!btn) return;
 
   const rect = btn.getBoundingClientRect();
   const size = Math.max(rect.width, rect.height);
-  const x = (e.clientX || e.touches[0].clientX) - rect.left - size / 2;
-  const y = (e.clientY || e.touches[0].clientY) - rect.top - size / 2;
+  const clientX = e.clientX ?? (e.touches && e.touches[0].clientX);
+  const clientY = e.clientY ?? (e.touches && e.touches[0].clientY);
+  if(clientX == null || clientY == null) return;
+
+  const x = clientX - rect.left - size / 2;
+  const y = clientY - rect.top - size / 2;
 
   const ripple = document.createElement("span");
   ripple.className = "ripple";
@@ -384,11 +386,9 @@ keys.addEventListener("touchstart", createRipple);
 keys.addEventListener("click", e=>{
   const btn = e.target.closest("button");
   if(!btn) return;
-
   handleInput(btn.dataset.value);
 });
 
-/* 履歴の削除ボタン */
 historyPanel.addEventListener("click", e=>{
   if(e.target.classList.contains("delete-btn")){
     e.target.parentElement.remove();
@@ -398,6 +398,14 @@ historyPanel.addEventListener("click", e=>{
 
 updateInputLine();
 updateTotal();
+
+/* Service Worker 登録 */
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js')
+      .catch(err => console.log('SW registration failed', err));
+  });
+}
 </script>
 
 </body>
