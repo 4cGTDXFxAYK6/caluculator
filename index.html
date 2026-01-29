@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8" />
-<title>スマホ対応 iPhone風電卓（背景色変化版）</title>
+<title>スマホ対応 iPhone風電卓（スマホ押下視認性UP版）</title>
 <meta name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
@@ -11,11 +11,11 @@
     --bg:#000;
     --panel:rgba(255,255,255,0.06);
     --btn-dark:#333;
-    --btn-dark-active:#555;        /* ★ 押した時の色（iPhone風） */
+    --btn-dark-active:#555;
     --btn-gray:#a5a5a5;
-    --btn-gray-active:#ddd;        /* ★ 押した時の色 */
+    --btn-gray-active:#ddd;
     --btn-accent:#ff9f0a;
-    --btn-accent-active:#ffb347;   /* ★ 押した時の色（iPhone風） */
+    --btn-accent-active:#ffb347;
     --neg:#ff3b30;
 
     --scroll:#dcdcdc;
@@ -113,8 +113,10 @@
     gap:12px;
   }
 
-  /* ★ iPhone電卓風：背景色が変わる押下アニメーション */
+  /* ★ iPhone風＋スマホで見える押下アニメーション */
   button{
+    position:relative;
+    overflow:hidden; /* ← フラッシュを内側に閉じ込める */
     height:64px;
     border-radius:32px;
     border:none;
@@ -126,8 +128,7 @@
     touch-action: manipulation;
 
     transition:
-      background-color 0.12s ease,
-      filter 0.12s ease;
+      background-color 0.12s ease;
   }
 
   /* 通常色 */
@@ -135,10 +136,24 @@
   .dark{ background:var(--btn-dark); }
   .orange{ background:var(--btn-accent); }
 
-  /* ★ 押した時の色（iPhone電卓と同じ挙動） */
+  /* 背景色変化（iPhone風） */
   .gray:active{ background:var(--btn-gray-active); }
   .dark:active{ background:var(--btn-dark-active); }
   .orange:active{ background:var(--btn-accent-active); }
+
+  /* ★ 押した瞬間に白いフラッシュを出す */
+  button::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:rgba(255,255,255,0.35); /* ← 白い光 */
+    opacity:0;
+    transition:opacity 0.12s ease;
+  }
+
+  button:active::after{
+    opacity:1; /* ← スマホでも確実に見える */
+  }
 
   .zero{ grid-column:span 2; text-align:left; padding-left:28px; }
 
