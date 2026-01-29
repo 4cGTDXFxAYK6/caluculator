@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8" />
-<title>スマホ対応 iPhone風電卓（Ripple本格修正版）</title>
+<title>スマホ対応 iPhone風電卓（Ripple本格修正版＋数字のみ履歴）</title>
 <meta name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
@@ -110,7 +110,7 @@
     gap:12px;
   }
 
-  /* ★ Ripple（波紋）エフェクト：本格修正版 */
+  /* Ripple（波紋）本格修正版 */
   button{
     position:relative;
     overflow:hidden;
@@ -251,7 +251,8 @@ function updateInputLine(){
   historyPanel.scrollTop = historyPanel.scrollHeight;
 }
 
-function finalizeToHistory(expr, result){
+/* ★ finalizeToHistory：数字だけの場合は = を付けない */
+function finalizeToHistory(expr, result, isSingleNumber = false){
   let line = historyPanel.lastElementChild;
 
   if(!line || line.dataset.type !== "input"){
@@ -261,15 +262,22 @@ function finalizeToHistory(expr, result){
   }
 
   line.dataset.type = "history";
-  line.innerHTML = `
-    <span class="text">${toFull(expr)} = ${result}</span>
-    <span class="delete-btn">×</span>
-  `;
+
+  if(isSingleNumber){
+    line.innerHTML = `
+      <span class="text">${expr}</span>
+      <span class="delete-btn">×</span>
+    `;
+  } else {
+    line.innerHTML = `
+      <span class="text">${toFull(expr)} = ${result}</span>
+      <span class="delete-btn">×</span>
+    `;
+  }
 
   if(Number(result) < 0) line.querySelector(".text").classList.add("negative");
 
   historyPanel.scrollTop = historyPanel.scrollHeight;
-
   updateTotal();
 }
 
@@ -283,17 +291,14 @@ function resetAll(){
   updateTotal();
 }
 
+/* ★ calculate：数字だけの＝は数字だけ履歴に追加 */
 function calculate(){
   if(!operator && current !== ""){
-    const expr = current;
-    const result = current;
-    finalizeToHistory(expr, result);
-
+    finalizeToHistory(current, current, true); // ← 数字だけ
     current = "";
     previous = "";
     operator = null;
     justCalculated = true;
-
     updateInputLine();
     return;
   }
@@ -302,7 +307,7 @@ function calculate(){
     const expr = previous + operator + current;
     const result = String(eval(expr));
 
-    finalizeToHistory(expr, result);
+    finalizeToHistory(expr, result, false);
 
     current = "";
     previous = "";
@@ -353,7 +358,7 @@ function handleInput(value){
   updateInputLine();
 }
 
-/* ★ Ripple（波紋）本格修正版：mousedown / touchstart */
+/* Ripple（波紋）本格修正版 */
 function createRipple(e){
   const btn = e.target.closest("button");
   if(!btn) return;
@@ -376,7 +381,6 @@ function createRipple(e){
 keys.addEventListener("mousedown", createRipple);
 keys.addEventListener("touchstart", createRipple);
 
-/* ★ click は handleInput のみ */
 keys.addEventListener("click", e=>{
   const btn = e.target.closest("button");
   if(!btn) return;
@@ -384,7 +388,7 @@ keys.addEventListener("click", e=>{
   handleInput(btn.dataset.value);
 });
 
-/* ★ 履歴の削除ボタンは干渉なしで動く */
+/* 履歴の削除ボタン */
 historyPanel.addEventListener("click", e=>{
   if(e.target.classList.contains("delete-btn")){
     e.target.parentElement.remove();
