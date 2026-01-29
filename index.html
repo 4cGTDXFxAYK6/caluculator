@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8" />
-<title>スマホ対応 iPhone風電卓（Ripple版）</title>
+<title>スマホ対応 iPhone風電卓（Ripple本格修正版）</title>
 <meta name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
@@ -110,7 +110,7 @@
     gap:12px;
   }
 
-  /* ★ Ripple（波紋）エフェクト */
+  /* ★ Ripple（波紋）エフェクト：本格修正版 */
   button{
     position:relative;
     overflow:hidden;
@@ -129,13 +129,11 @@
       filter 0.08s;
   }
 
-  /* 押したときの縮小アニメーションは残す */
   button:active{
     transform:scale(.88);
     filter:brightness(1.45);
   }
 
-  /* Ripple の円 */
   .ripple{
     position:absolute;
     border-radius:50%;
@@ -152,7 +150,6 @@
     }
   }
 
-  /* ボタン色 */
   .gray{ background:var(--btn-gray); color:#000; }
   .dark{ background:var(--btn-dark); }
   .orange{ background:var(--btn-accent); }
@@ -356,15 +353,15 @@ function handleInput(value){
   updateInputLine();
 }
 
-/* ★ Ripple（波紋）エフェクト */
-keys.addEventListener("click", e=>{
+/* ★ Ripple（波紋）本格修正版：mousedown / touchstart */
+function createRipple(e){
   const btn = e.target.closest("button");
   if(!btn) return;
 
   const rect = btn.getBoundingClientRect();
   const size = Math.max(rect.width, rect.height);
-  const x = e.clientX - rect.left - size / 2;
-  const y = e.clientY - rect.top - size / 2;
+  const x = (e.clientX || e.touches[0].clientX) - rect.left - size / 2;
+  const y = (e.clientY || e.touches[0].clientY) - rect.top - size / 2;
 
   const ripple = document.createElement("span");
   ripple.className = "ripple";
@@ -373,10 +370,26 @@ keys.addEventListener("click", e=>{
   ripple.style.top = y + "px";
 
   btn.appendChild(ripple);
-
   setTimeout(()=> ripple.remove(), 450);
+}
+
+keys.addEventListener("mousedown", createRipple);
+keys.addEventListener("touchstart", createRipple);
+
+/* ★ click は handleInput のみ */
+keys.addEventListener("click", e=>{
+  const btn = e.target.closest("button");
+  if(!btn) return;
 
   handleInput(btn.dataset.value);
+});
+
+/* ★ 履歴の削除ボタンは干渉なしで動く */
+historyPanel.addEventListener("click", e=>{
+  if(e.target.classList.contains("delete-btn")){
+    e.target.parentElement.remove();
+    updateTotal();
+  }
 });
 
 updateInputLine();
