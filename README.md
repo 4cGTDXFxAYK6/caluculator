@@ -138,24 +138,24 @@ iPhone風の洗練された UI と、履歴の見やすさ・操作性を重視�
 
 ## 📁 ファイル構成
 
-
+```
 /calculator-pwa/ 
-├─ index.html              # 電卓本体 
-├─ manifest.json           # PWA設定 
-├─ service-worker.js       # キャッシュ制御 
-├─ icons/ 
-│   ├─ icon-192.png 
+├─ index.html              # 電卓本体
+├─ manifest.json           # PWA設定
+├─ service-worker.js       # キャッシュ制御
+├─ icons/
+│   ├─ icon-192.png
 │   └─ icon-512.png 
-├─ docs/ 
-│   └─ screenshots/ 
-│        ├─ icon.png 
-│        ├─ main-ui.png 
+├─ docs/
+│   └─ screenshots/
+│        ├─ icon.png
+│        ├─ main-ui.png
 │        ├─ history.png 
-│        └─ pwa-install.png 
+│        └─ pwa-install.png
 └─ README.md               # このファイル
 
 
----
+```
 
 ## 🎨 アイコン仕様
 
@@ -195,5 +195,6 @@ iPhone風の洗練された UI と、履歴の見やすさ・操作性を重視�
 
 ## 📦 ライセンス
 このプロジェクトは自由に改変・利用できます。
+
 
 
