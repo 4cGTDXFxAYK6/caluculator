@@ -1,4 +1,7 @@
-const CACHE_VERSION = 'v4';   // ← バージョンを上げる
+// ===============================
+//  PWA キャッシュ設定
+// ===============================
+const CACHE_VERSION = 'v4';   // ← 更新時は数字を上げる
 const CACHE_NAME = `calculator-cache-${CACHE_VERSION}`;
 
 const URLS_TO_CACHE = [
@@ -9,19 +12,19 @@ const URLS_TO_CACHE = [
   './icon-512.png'
 ];
 
-// ------------------------------
-// インストール
-// ------------------------------
+// ===============================
+//  インストール（新キャッシュ作成）
+// ===============================
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(URLS_TO_CACHE))
   );
-  self.skipWaiting(); // ← 新SWを即座に有効化
+  self.skipWaiting(); // ← 新しい SW を即座に有効化
 });
 
-// ------------------------------
-// 有効化（古いキャッシュ削除）
-// ------------------------------
+// ===============================
+//  有効化（古いキャッシュ削除）
+// ===============================
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
@@ -32,29 +35,30 @@ self.addEventListener('activate', event => {
       )
     )
   );
-  self.clients.claim(); // ← ページを即座に新SWの管理下に
+  self.clients.claim(); // ← ページを即座に新 SW の管理下に
 });
 
-// ------------------------------
-// 更新があったら自動リロード
-// ------------------------------
+// ===============================
+//  更新があったら自動リロード
+// ===============================
 self.addEventListener('controllerchange', () => {
-  // すべてのクライアントにリロード命令を送る
   self.clients.matchAll().then(clients => {
     clients.forEach(client => client.navigate(client.url));
   });
 });
 
-// ------------------------------
-// fetch（キャッシュ優先 + ネット更新）
-// ------------------------------
+// ===============================
+//  fetch（キャッシュ優先 + ネット更新）
+// ===============================
 self.addEventListener('fetch', event => {
   const request = event.request;
 
   event.respondWith(
     caches.match(request).then(cachedResponse => {
+      // キャッシュがあれば即返す
       if (cachedResponse) return cachedResponse;
 
+      // ネットから取得してキャッシュに保存
       return fetch(request)
         .then(networkResponse => {
           if (
