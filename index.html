@@ -64,29 +64,39 @@
     line-height:1.00;
   }
 
-  .history::-webkit-scrollbar{ width:6px; }
-  .history::-webkit-scrollbar-thumb{ background:var(--scroll); border-radius:4px; }
-  .history::-webkit-scrollbar-track{ background:var(--scroll-track); }
-
+  /* --- 履歴の完全最適化版 --- */
   .history-line{
     padding:4px 6px;
     border-radius:4px;
     display:flex;
-    justify-content:space-between;
     align-items:center;
     gap:10px;
+
     white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
+    overflow-x:auto;          /* 横スクロール可能 */
+    scrollbar-width:none;     /* Firefox */
+
     user-select:none;
     border-bottom:1px solid rgba(255,255,255,0.18);
   }
+
+  .history-line::-webkit-scrollbar{
+    display:none;             /* Chrome/Brave */
+  }
+
   .history-line:nth-child(even){ background:var(--row-b); }
   .history-line:active{ background:rgba(255,255,255,0.30); }
+
+  .text{
+    flex:1;
+    overflow:hidden;
+    text-overflow:ellipsis;   /* 長い場合は「…」 */
+  }
 
   .negative{color:var(--neg)}
 
   .delete-btn{
+    flex-shrink:0;            /* × を絶対に縮ませない */
     color:var(--btn-accent);
     font-size:28px;
     font-weight:700;
