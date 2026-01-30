@@ -409,11 +409,12 @@ historyPanel.addEventListener("click", e=>{
 updateInputLine();
 updateTotal();
 
-/* Service Worker 登録 */
+/* Service Worker 登録 + 自動更新検知 */
 if('serviceWorker' in navigator){
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('service-worker.js')
-      .catch(err => console.log('SW registration failed', err));
+  navigator.serviceWorker.register('service-worker.js');
+
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    window.location.reload();
   });
 }
 </script>

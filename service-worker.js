@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v4';   // ← バージョンを上げる
 const CACHE_NAME = `calculator-cache-${CACHE_VERSION}`;
 
 const URLS_TO_CACHE = [
@@ -9,13 +9,19 @@ const URLS_TO_CACHE = [
   './icon-512.png'
 ];
 
+// ------------------------------
+// インストール
+// ------------------------------
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(URLS_TO_CACHE))
   );
-  self.skipWaiting();
+  self.skipWaiting(); // ← 新SWを即座に有効化
 });
 
+// ------------------------------
+// 有効化（古いキャッシュ削除）
+// ------------------------------
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
@@ -26,9 +32,22 @@ self.addEventListener('activate', event => {
       )
     )
   );
-  self.clients.claim();
+  self.clients.claim(); // ← ページを即座に新SWの管理下に
 });
 
+// ------------------------------
+// 更新があったら自動リロード
+// ------------------------------
+self.addEventListener('controllerchange', () => {
+  // すべてのクライアントにリロード命令を送る
+  self.clients.matchAll().then(clients => {
+    clients.forEach(client => client.navigate(client.url));
+  });
+});
+
+// ------------------------------
+// fetch（キャッシュ優先 + ネット更新）
+// ------------------------------
 self.addEventListener('fetch', event => {
   const request = event.request;
 
@@ -49,7 +68,7 @@ self.addEventListener('fetch', event => {
           return networkResponse;
         })
         .catch(() => {
-          // オフライン時のフォールバック（必要なら追加可能）
+          // オフライン時のフォールバック（必要なら追加）
         });
     })
   );
