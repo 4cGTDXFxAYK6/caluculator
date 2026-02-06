@@ -16,7 +16,7 @@
     --btn-accent:#ff9f0a;
     --neg:#ff3b30;
     --row-b: rgba(255,255,255,0.18);
-    --border: rgba(255,255,255,0.25); /* ← 区切り線B */
+    --border: #ff9f0a; /* ← オレンジ区切り線 */
   }
 
   html,body{
@@ -88,6 +88,7 @@
     padding:0 8px;
   }
 
+  /* ▼ 合計表示枠とキーの隙間ゼロ */
   .total-box{
     background:rgba(255,255,255,0.10);
     backdrop-filter:blur(6px);
@@ -96,14 +97,16 @@
     border-radius:12px;
     font-size:26px;
     text-align:right;
+    margin-bottom:0; /* ← 隙間ゼロ */
   }
 
-  /* ▼ 四角キー・隙間ゼロ・区切り線B */
+  /* ▼ 四角キー・隙間ゼロ・区切り線オレンジ太め */
   .keys{
     display:grid;
     grid-template-columns:repeat(4, 1fr);
     gap:0;
     width:100%;
+    margin-top:0; /* ← 隙間ゼロ */
   }
 
   button{
@@ -115,7 +118,7 @@
     max-height:64px;
 
     border-radius:0;
-    border:1px solid var(--border); /* ← 区切り線B */
+    border:2px solid var(--border); /* ← 太めオレンジ区切り線 */
 
     font-size:24px;
     line-height:1;
