@@ -41,7 +41,7 @@
     max-width:600px;
     margin:auto;
     padding:16px;
-    padding-bottom:24px;   /* ← 下に余裕を追加 */
+    padding-bottom:32px;   /* ← 下に余裕を追加 */
     display:flex;
     flex-direction:column;
     gap:14px;
@@ -107,16 +107,23 @@
     width:100%;
   }
 
-  /* ← はみ出し改善版（重要） */
+  /* ← はみ出し完全防止版（重要） */
   button{
     position:relative;
     overflow:hidden;
-    height:14vw;
-    max-height:60px;        /* ← ここを縮めてはみ出し防止 */
+
+    /* 高さは固定値ベースで安定 */
+    height:56px;
+    min-height:48px;
+    max-height:64px;
+
     border-radius:32px;
     border:none;
-    font-size:5.5vw;
-    max-font-size:28px;     /* ← 文字も調整 */
+
+    /* フォントも自動調整 */
+    font-size:24px;
+    line-height:1;
+
     color:#fff;
     cursor:pointer;
     user-select:none;
@@ -176,7 +183,7 @@
 </div>
 
 <script>
-/* JS は前回の完全版と同じ（省略なし） */
+/* JS は前回の完全版と同じ */
 
 const historyPanel = document.getElementById("history");
 const totalBox = document.getElementById("totalBox");
