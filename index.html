@@ -10,12 +10,12 @@
 <style>
   :root{
     --bg:#000;
-    --panel:rgba(255,255,255,0.06);
+    --panel:rgba(255,255,255,0.08);
     --btn-dark:#333;
     --btn-gray:#a5a5a5;
     --btn-accent:#ff9f0a;
     --neg:#ff3b30;
-    --row-b: rgba(255,255,255,0.22);
+    --row-b: rgba(255,255,255,0.18);
   }
 
   html,body{
@@ -49,7 +49,7 @@
   .history{
     background:var(--panel);
     backdrop-filter:blur(8px);
-    color:#eee;
+    color:#fff; /* ← 文字が見えない問題を修正 */
     height:240px;
     padding:12px;
     border-radius:14px;
@@ -59,7 +59,7 @@
   }
 
   .history-line{
-    padding:4px 6px;
+    padding:6px 6px;
     border-radius:4px;
     display:flex;
     align-items:center;
@@ -113,7 +113,7 @@
     min-height:48px;
     max-height:64px;
 
-    border-radius:0; /* ← 四角キー */
+    border-radius:0;
     border:none;
 
     font-size:24px;
@@ -178,8 +178,6 @@
 </div>
 
 <script>
-/* ▼ JS 完全版（途中で切れない） */
-
 const historyPanel = document.getElementById("history");
 const totalBox = document.getElementById("totalBox");
 const keys = document.querySelector(".keys");
