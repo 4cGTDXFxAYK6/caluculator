@@ -6,7 +6,6 @@
 <meta name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
-<!-- PWA -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
 
@@ -18,11 +17,6 @@
     --btn-gray:#a5a5a5;
     --btn-accent:#ff9f0a;
     --neg:#ff3b30;
-
-    --scroll:#dcdcdc;
-    --scroll-track:#555;
-
-    --row-a: transparent;
     --row-b: rgba(255,255,255,0.22);
   }
 
@@ -33,7 +27,6 @@
     font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
                  "Helvetica Neue", Arial, sans-serif;
     touch-action: manipulation;
-    -webkit-touch-callout: none;
   }
 
   body{
@@ -42,9 +35,11 @@
     justify-content:center;
   }
 
+  /* 横幅最適化 */
   .calculator{
     width:100%;
-    max-width:360px;
+    max-width:600px;     /* ← スマホでもPCでも美しい */
+    margin:auto;
     padding:16px;
     display:flex;
     flex-direction:column;
@@ -61,50 +56,37 @@
     border-radius:14px;
     overflow:auto;
     font-size:26px;
-    line-height:1.00;
   }
 
-  /* --- 履歴の完全最適化版 --- */
+  /* 履歴の完全最適化 */
   .history-line{
     padding:4px 6px;
     border-radius:4px;
     display:flex;
     align-items:center;
     gap:10px;
-
     white-space:nowrap;
-    overflow-x:auto;          /* 横スクロール可能 */
-    scrollbar-width:none;     /* Firefox */
-
-    user-select:none;
+    overflow-x:auto;
+    scrollbar-width:none;
     border-bottom:1px solid rgba(255,255,255,0.18);
   }
-
-  .history-line::-webkit-scrollbar{
-    display:none;             /* Chrome/Brave */
-  }
-
+  .history-line::-webkit-scrollbar{ display:none; }
   .history-line:nth-child(even){ background:var(--row-b); }
-  .history-line:active{ background:rgba(255,255,255,0.30); }
 
   .text{
     flex:1;
     overflow:hidden;
-    text-overflow:ellipsis;   /* 長い場合は「…」 */
+    text-overflow:ellipsis;
   }
 
-  .negative{color:var(--neg)}
-
   .delete-btn{
-    flex-shrink:0;            /* × を絶対に縮ませない */
+    flex-shrink:0;
     color:var(--btn-accent);
     font-size:28px;
     font-weight:700;
     cursor:pointer;
     padding:0 8px;
-    user-select:none;
   }
-  .delete-btn:active{ color:#ffb347; }
 
   .total-box{
     background:rgba(255,255,255,0.10);
@@ -114,30 +96,31 @@
     border-radius:12px;
     font-size:26px;
     text-align:right;
-    line-height:1.00;
   }
 
+  /* ボタンの横幅最適化 */
   .keys{
     display:grid;
-    grid-template-columns:repeat(4,1fr);
+    grid-template-columns:repeat(4, 1fr);
     gap:12px;
+    width:100%;
   }
 
+  /* ボタンの自動サイズ調整 */
   button{
     position:relative;
     overflow:hidden;
-    height:64px;
+    height:14vw;          /* ← 画面幅に応じて自動調整 */
+    max-height:80px;      /* ← 大画面では大きくなりすぎない */
     border-radius:32px;
     border:none;
-    font-size:28px;
+    font-size:6vw;        /* ← 文字サイズも自動調整 */
+    max-font-size:32px;
     color:#fff;
     cursor:pointer;
     user-select:none;
     font-family:inherit;
-    touch-action: manipulation;
-    transition:
-      transform 0.08s cubic-bezier(.25,.46,.45,.94),
-      filter 0.08s;
+    transition:transform 0.08s, filter 0.08s;
   }
 
   button:active{
@@ -145,32 +128,14 @@
     filter:brightness(1.45);
   }
 
-  .ripple{
-    position:absolute;
-    border-radius:50%;
-    background:rgba(255,255,255,0.45);
-    transform:scale(0);
-    animation:ripple-effect 0.45s ease-out;
-    pointer-events:none;
-  }
-
-  @keyframes ripple-effect{
-    to{
-      transform:scale(3.5);
-      opacity:0;
-    }
-  }
-
   .gray{ background:var(--btn-gray); color:#000; }
   .dark{ background:var(--btn-dark); }
   .orange{ background:var(--btn-accent); }
 
-  .zero{ grid-column:span 2; text-align:left; padding-left:28px; }
-
-  @media (max-width:480px){
-    .history{font-size:24px;}
-    .total-box{font-size:24px;}
-    button{height:60px;font-size:26px;}
+  .zero{
+    grid-column:span 2;
+    text-align:left;
+    padding-left:28px;
   }
 </style>
 </head>
@@ -210,6 +175,8 @@
 </div>
 
 <script>
+/* ここから JS（あなたの最新版 + 自動更新対応） */
+
 const historyPanel = document.getElementById("history");
 const totalBox = document.getElementById("totalBox");
 const keys = document.querySelector(".keys");
@@ -367,32 +334,6 @@ function handleInput(value){
   updateInputLine();
 }
 
-function createRipple(e){
-  const btn = e.target.closest("button");
-  if(!btn) return;
-
-  const rect = btn.getBoundingClientRect();
-  const size = Math.max(rect.width, rect.height);
-  const clientX = e.clientX ?? (e.touches && e.touches[0].clientX);
-  const clientY = e.clientY ?? (e.touches && e.touches[0].clientY);
-  if(clientX == null || clientY == null) return;
-
-  const x = clientX - rect.left - size / 2;
-  const y = clientY - rect.top - size / 2;
-
-  const ripple = document.createElement("span");
-  ripple.className = "ripple";
-  ripple.style.width = ripple.style.height = size + "px";
-  ripple.style.left = x + "px";
-  ripple.style.top = y + "px";
-
-  btn.appendChild(ripple);
-  setTimeout(()=> ripple.remove(), 450);
-}
-
-keys.addEventListener("mousedown", createRipple);
-keys.addEventListener("touchstart", createRipple);
-
 keys.addEventListener("click", e=>{
   const btn = e.target.closest("button");
   if(!btn) return;
@@ -409,7 +350,7 @@ historyPanel.addEventListener("click", e=>{
 updateInputLine();
 updateTotal();
 
-/* Service Worker 登録 + 自動更新検知 */
+/* Service Worker + 自動更新 */
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('service-worker.js');
 
