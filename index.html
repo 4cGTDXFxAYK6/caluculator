@@ -35,25 +35,24 @@
     justify-content:center;
   }
 
-  /* 下余白を増やしてキーが押しやすくなる */
   .calculator{
     width:100%;
     max-width:600px;
     margin:auto;
     padding:16px;
-    padding-bottom:40px;   /* ← ここを増やした */
+    padding-bottom:40px;
     display:flex;
     flex-direction:column;
     gap:14px;
     box-sizing:border-box;
   }
 
-  /* 履歴の高さを少し下げてキーのスペースを確保 */
+  /* JS が高さを設定するので height は auto */
   .history{
     background:var(--panel);
     backdrop-filter:blur(8px);
     color:#eee;
-    height:40vh;        /* ← 45vh → 40vh に変更 */
+    height:auto;
     padding:12px;
     border-radius:14px;
     overflow:auto;
@@ -107,12 +106,12 @@
     width:100%;
   }
 
-  /* ← はみ出し完全防止版（上下に余裕ができる） */
+  /* ボタン高さは固定値ベースで安定 */
   button{
     position:relative;
     overflow:hidden;
 
-    height:56px;        /* ← 安定する高さ */
+    height:56px;
     min-height:48px;
     max-height:64px;
 
@@ -181,7 +180,29 @@
 </div>
 
 <script>
-/* JS は前回の完全版と同じ */
+/* ▼▼▼ ここが “キー隠れ問題” を完全解決する部分 ▼▼▼ */
+
+function adjustHistoryHeight() {
+  const screenH = window.innerHeight;
+  const history = document.querySelector('.history');
+
+  const keyHeight = 56;
+  const keyGap = 12;
+  const keyRows = 4;
+
+  const keysTotal = (keyHeight * keyRows) + (keyGap * (keyRows - 1));
+  const totalBox = 60;
+  const padding = 100;
+
+  const historyH = screenH - (keysTotal + totalBox + padding);
+
+  history.style.height = historyH + 'px';
+}
+
+adjustHistoryHeight();
+window.addEventListener('resize', adjustHistoryHeight);
+
+/* ▼▼▼ ここからはあなたの元の JS ▼▼▼ */
 
 const historyPanel = document.getElementById("history");
 const totalBox = document.getElementById("totalBox");
