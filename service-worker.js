@@ -1,7 +1,7 @@
 // ===============================
 //  PWA キャッシュ設定
 // ===============================
-const CACHE_VERSION = 'v4';   // ← 更新時は数字を上げる
+const CACHE_VERSION = 'v5';   // ← 更新時は数字を上げる
 const CACHE_NAME = `calculator-cache-${CACHE_VERSION}`;
 
 const URLS_TO_CACHE = [
@@ -76,4 +76,5 @@ self.addEventListener('fetch', event => {
         });
     })
   );
+
 });
