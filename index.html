@@ -16,6 +16,7 @@
     --btn-accent:#ff9f0a;
     --neg:#ff3b30;
     --row-b: rgba(255,255,255,0.18);
+    --border: rgba(255,255,255,0.25); /* ← 区切り線B */
   }
 
   html,body{
@@ -45,7 +46,7 @@
     box-sizing:border-box;
   }
 
-  /* ▼ 履歴枠：260px に拡張 */
+  /* ▼ 履歴枠：260px */
   .history{
     background:var(--panel);
     backdrop-filter:blur(8px);
@@ -97,7 +98,7 @@
     text-align:right;
   }
 
-  /* ▼ 四角キー・隙間ゼロ */
+  /* ▼ 四角キー・隙間ゼロ・区切り線B */
   .keys{
     display:grid;
     grid-template-columns:repeat(4, 1fr);
@@ -114,7 +115,7 @@
     max-height:64px;
 
     border-radius:0;
-    border:none;
+    border:1px solid var(--border); /* ← 区切り線B */
 
     font-size:24px;
     line-height:1;
