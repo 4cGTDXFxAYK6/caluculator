@@ -47,18 +47,18 @@
     box-sizing:border-box;
   }
 
-  /* ▼ 履歴枠を200pxに固定（テスト用） */
- .history{
-  background:var(--panel);
-  backdrop-filter:blur(8px);
-  color:#eee;
-  height:240px;     /* ← 実用的な最大値 */
-  padding:12px;
-  border-radius:14px;
-  overflow:auto;
-  font-size:22px;
-  line-height:1.0;
-}
+  /* ▼ 履歴枠：実用最大の240px */
+  .history{
+    background:var(--panel);
+    backdrop-filter:blur(8px);
+    color:#eee;
+    height:240px;
+    padding:12px;
+    border-radius:14px;
+    overflow:auto;
+    font-size:22px;
+    line-height:1.0;
+  }
 
   .history-line{
     padding:4px 6px;
@@ -180,7 +180,7 @@
 </div>
 
 <script>
-/* ▼ JS（前回の安定版そのまま） */
+/* ▼ JS（安定版そのまま） */
 
 const historyPanel = document.getElementById("history");
 const totalBox = document.getElementById("totalBox");
@@ -367,4 +367,3 @@ if('serviceWorker' in navigator){
 
 </body>
 </html>
-
