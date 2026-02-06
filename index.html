@@ -46,15 +46,16 @@
     box-sizing:border-box;
   }
 
+  /* ▼ 履歴欄（フォント21px＋左右8px） */
   .history{
     background:var(--panel);
     backdrop-filter:blur(8px);
     color:#fff;
     height:300px;
-    padding:12px;
+    padding:12px 8px; /* ← 左右8px */
     border-radius:14px;
     overflow:auto;
-    font-size:22px;
+    font-size:21px; /* ← 21px */
     line-height:1.0;
     margin-bottom:14px;
   }
@@ -107,7 +108,7 @@
     margin:0;
   }
 
-  /* ▼ 四角キー（角丸なし）＋押下強化＋リップル */
+  /* ▼ 四角キー＋押下強化＋リップル */
   button{
     position:relative;
     overflow:hidden;
@@ -116,7 +117,7 @@
     min-height:48px;
     max-height:64px;
 
-    border-radius:0; /* ← 四角キーに変更 */
+    border-radius:0; /* ← 四角キー */
     border:1px solid var(--border);
 
     font-size:24px;
