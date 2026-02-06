@@ -38,7 +38,7 @@
   /* 横幅最適化 */
   .calculator{
     width:100%;
-    max-width:600px;     /* ← スマホでもPCでも美しい */
+    max-width:600px;
     margin:auto;
     padding:16px;
     display:flex;
@@ -47,15 +47,17 @@
     box-sizing:border-box;
   }
 
+  /* 履歴の高さ + フォント最適化 */
   .history{
     background:var(--panel);
     backdrop-filter:blur(8px);
     color:#eee;
-    height:32vh;
+    height:45vh;        /* ← 高さを増やした */
     padding:12px;
     border-radius:14px;
     overflow:auto;
-    font-size:26px;
+    font-size:22px;     /* ← フォントを少し小さく */
+    line-height:1.0;
   }
 
   /* 履歴の完全最適化 */
@@ -82,7 +84,7 @@
   .delete-btn{
     flex-shrink:0;
     color:var(--btn-accent);
-    font-size:28px;
+    font-size:26px;
     font-weight:700;
     cursor:pointer;
     padding:0 8px;
@@ -110,11 +112,11 @@
   button{
     position:relative;
     overflow:hidden;
-    height:14vw;          /* ← 画面幅に応じて自動調整 */
-    max-height:80px;      /* ← 大画面では大きくなりすぎない */
+    height:14vw;
+    max-height:80px;
     border-radius:32px;
     border:none;
-    font-size:6vw;        /* ← 文字サイズも自動調整 */
+    font-size:6vw;
     max-font-size:32px;
     color:#fff;
     cursor:pointer;
@@ -175,7 +177,7 @@
 </div>
 
 <script>
-/* ここから JS（あなたの最新版 + 自動更新対応） */
+/* JS は前回の完全版と同じ（省略なし） */
 
 const historyPanel = document.getElementById("history");
 const totalBox = document.getElementById("totalBox");
