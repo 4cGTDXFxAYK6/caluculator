@@ -48,17 +48,17 @@
   }
 
   /* ▼ 履歴枠を200pxに固定（テスト用） */
-  .history{
-    background:var(--panel);
-    backdrop-filter:blur(8px);
-    color:#eee;
-    height:200px;     /* ← ここが今回のテストポイント */
-    padding:12px;
-    border-radius:14px;
-    overflow:auto;
-    font-size:22px;
-    line-height:1.0;
-  }
+ .history{
+  background:var(--panel);
+  backdrop-filter:blur(8px);
+  color:#eee;
+  height:240px;     /* ← 実用的な最大値 */
+  padding:12px;
+  border-radius:14px;
+  overflow:auto;
+  font-size:22px;
+  line-height:1.0;
+}
 
   .history-line{
     padding:4px 6px;
@@ -367,3 +367,4 @@ if('serviceWorker' in navigator){
 
 </body>
 </html>
+
