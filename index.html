@@ -107,6 +107,7 @@
     margin:0;
   }
 
+  /* ▼ 四角キー（角丸なし）＋押下強化＋リップル */
   button{
     position:relative;
     overflow:hidden;
@@ -115,7 +116,7 @@
     min-height:48px;
     max-height:64px;
 
-    border-radius:18px;
+    border-radius:0; /* ← 四角キーに変更 */
     border:1px solid var(--border);
 
     font-size:24px;
@@ -216,7 +217,7 @@ let previous = "";
 let operator = null;
 let justCalculated = false;
 
-/* ▼ 数字をカンマ付きにする関数 */
+/* ▼ 数字をカンマ付きにする */
 function formatNumber(num){
   if(num === "" || num === null || num === undefined) return "";
   const n = Number(num);
