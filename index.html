@@ -16,7 +16,7 @@
     --btn-accent:#ff9f0a;
     --neg:#ff3b30;
     --row-b: rgba(255,255,255,0.18);
-    --border: rgba(255,255,255,0.25); /* ← 元の区切り線（中くらい） */
+    --border: rgba(255,255,255,0.25); /* ← 区切り線B */
   }
 
   html,body{
@@ -42,7 +42,7 @@
     padding-bottom:40px;
     display:flex;
     flex-direction:column;
-    gap:0; /* ← ここを 0 にして隙間ゼロを実現 */
+    gap:0; /* ← 隙間ゼロの決定打 */
     box-sizing:border-box;
   }
 
@@ -57,7 +57,7 @@
     overflow:auto;
     font-size:22px;
     line-height:1.0;
-    margin-bottom:14px; /* 履歴と合計枠の間だけ余白を残す */
+    margin-bottom:14px; /* 履歴と合計枠の間だけ余白 */
   }
 
   .history-line{
@@ -101,7 +101,7 @@
     margin:0; /* ← 隙間ゼロ */
   }
 
-  /* ▼ 四角キー・隙間ゼロ・区切り線（元の細い白系） */
+  /* ▼ 四角キー・隙間ゼロ・区切り線B */
   .keys{
     display:grid;
     grid-template-columns:repeat(4, 1fr);
@@ -119,7 +119,7 @@
     max-height:64px;
 
     border-radius:0;
-    border:1px solid var(--border); /* ← 元の区切り線に戻す */
+    border:1px solid var(--border); /* ← 区切り線B */
 
     font-size:24px;
     line-height:1;
