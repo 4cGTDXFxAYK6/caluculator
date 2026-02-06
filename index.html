@@ -16,7 +16,7 @@
     --btn-accent:#ff9f0a;
     --neg:#ff3b30;
     --row-b: rgba(255,255,255,0.18);
-    --border: rgba(255,255,255,0.25); /* 区切り線B */
+    --border: rgba(255,255,255,0.25);
   }
 
   html,body{
@@ -46,7 +46,6 @@
     box-sizing:border-box;
   }
 
-  /* ▼ 履歴枠：300px */
   .history{
     background:var(--panel);
     backdrop-filter:blur(8px);
@@ -108,7 +107,6 @@
     margin:0;
   }
 
-  /* ▼ 角丸キー＋区切り線B */
   button{
     position:relative;
     overflow:hidden;
@@ -136,7 +134,6 @@
       color 0.05s ease-out;
   }
 
-  /* ▼ JSで付与される押下クラス（:activeより強力） */
   .pressed{
     background-color: rgba(255,255,255,0.65);
     transform: scale(.85);
@@ -147,7 +144,6 @@
     color:#000;
   }
 
-  /* ▼ 波紋エフェクト（リップル） */
   .ripple{
     position:absolute;
     border-radius:50%;
@@ -220,16 +216,22 @@ let previous = "";
 let operator = null;
 let justCalculated = false;
 
+/* ▼ 数字をカンマ付きにする関数 */
+function formatNumber(num){
+  if(num === "" || num === null || num === undefined) return "";
+  const n = Number(num);
+  if(isNaN(n)) return num;
+  return n.toLocaleString("ja-JP");
+}
+
 /* ▼ 押下エフェクト（JS制御） */
 keys.addEventListener("click", e=>{
   const btn = e.target.closest("button");
   if(!btn) return;
 
-  /* 押下クラス付与 */
   btn.classList.add("pressed");
   setTimeout(()=> btn.classList.remove("pressed"), 120);
 
-  /* 波紋エフェクト */
   const ripple = document.createElement("span");
   ripple.classList.add("ripple");
   const rect = btn.getBoundingClientRect();
@@ -242,7 +244,7 @@ keys.addEventListener("click", e=>{
   handleInput(btn.dataset.value);
 });
 
-/* ▼ 計算ロジック（既存） */
+/* ▼ 計算ロジック */
 const toFull = s =>
   s.replace(/\*/g,"×")
    .replace(/\//g,"÷");
@@ -253,12 +255,12 @@ function updateTotal(){
 
   lines.forEach(line=>{
     const text = line.querySelector(".text").textContent;
-    const result = text.split("=").pop().trim();
+    const result = text.split("=").pop().trim().replace(/,/g,"");
     const num = Number(result);
     if(!isNaN(num)) sum += num;
   });
 
-  totalBox.textContent = "合計: " + sum;
+  totalBox.textContent = "合計: " + formatNumber(sum);
 }
 
 function updateInputLine(){
@@ -279,8 +281,11 @@ function updateInputLine(){
   const text = last.querySelector(".text");
 
   let expr = "";
-  if(previous && operator) expr = toFull(previous + " " + operator + " " + current);
-  else expr = toFull(current || "0");
+  if(previous && operator){
+    expr = `${formatNumber(previous)} ${toFull(operator)} ${formatNumber(current)}`;
+  } else {
+    expr = formatNumber(current || "0");
+  }
 
   text.textContent = expr;
   historyPanel.scrollTop = historyPanel.scrollHeight;
@@ -299,17 +304,16 @@ function finalizeToHistory(expr, result, isSingleNumber = false){
 
   if(isSingleNumber){
     line.innerHTML = `
-      <span class="text">${expr}</span>
+      <span class="text">${formatNumber(expr)}</span>
       <span class="delete-btn">×</span>
     `;
   } else {
+    const [a,op,b] = expr.split(/([+\-*/])/);
     line.innerHTML = `
-      <span class="text">${toFull(expr)} = ${result}</span>
+      <span class="text">${formatNumber(a)} ${toFull(op)} ${formatNumber(b)} = ${formatNumber(result)}</span>
       <span class="delete-btn">×</span>
     `;
   }
-
-  if(Number(result) < 0) line.querySelector(".text").classList.add("negative");
 
   historyPanel.scrollTop = historyPanel.scrollHeight;
   updateTotal();
