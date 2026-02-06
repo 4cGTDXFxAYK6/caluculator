@@ -108,7 +108,7 @@
     margin:0;
   }
 
-  /* ▼ キーサイズそのまま角丸復活＋押した感強化 */
+  /* ▼ 角丸キー＋区切り線B */
   button{
     position:relative;
     overflow:hidden;
@@ -117,7 +117,7 @@
     min-height:48px;
     max-height:64px;
 
-    border-radius:18px; /* ← 角丸復活（サイズはそのまま） */
+    border-radius:18px;
     border:1px solid var(--border);
 
     font-size:24px;
@@ -136,15 +136,32 @@
       color 0.05s ease-out;
   }
 
-  /* ▼ 押した感を角丸に最適化（自然に強く見える） */
-  button:active{
-    background-color: rgba(255,255,255,0.55); /* ← 光る */
-    transform: scale(.88); /* ← 沈む */
+  /* ▼ JSで付与される押下クラス（:activeより強力） */
+  .pressed{
+    background-color: rgba(255,255,255,0.65);
+    transform: scale(.85);
     box-shadow:
-      inset 0 0 25px rgba(255,255,255,0.8), /* ← 角丸だと凹みが強調される */
-      0 0 12px rgba(255,255,255,0.4);       /* ← 外側にも光 */
-    border-color: var(--btn-accent); /* ← 枠線オレンジ */
-    color:#000; /* ← 文字色反転で視認性UP */
+      inset 0 0 28px rgba(255,255,255,0.9),
+      0 0 16px rgba(255,255,255,0.6);
+    border-color: var(--btn-accent);
+    color:#000;
+  }
+
+  /* ▼ 波紋エフェクト（リップル） */
+  .ripple{
+    position:absolute;
+    border-radius:50%;
+    background:rgba(255,255,255,0.55);
+    transform:scale(0);
+    animation:ripple-effect 0.45s ease-out;
+    pointer-events:none;
+  }
+
+  @keyframes ripple-effect{
+    to{
+      transform:scale(3.2);
+      opacity:0;
+    }
   }
 
   .gray{ background:var(--btn-gray); color:#000; }
@@ -203,6 +220,29 @@ let previous = "";
 let operator = null;
 let justCalculated = false;
 
+/* ▼ 押下エフェクト（JS制御） */
+keys.addEventListener("click", e=>{
+  const btn = e.target.closest("button");
+  if(!btn) return;
+
+  /* 押下クラス付与 */
+  btn.classList.add("pressed");
+  setTimeout(()=> btn.classList.remove("pressed"), 120);
+
+  /* 波紋エフェクト */
+  const ripple = document.createElement("span");
+  ripple.classList.add("ripple");
+  const rect = btn.getBoundingClientRect();
+  ripple.style.width = ripple.style.height = Math.max(rect.width, rect.height) + "px";
+  ripple.style.left = (e.clientX - rect.left - rect.width/2) + "px";
+  ripple.style.top = (e.clientY - rect.top - rect.height/2) + "px";
+  btn.appendChild(ripple);
+  setTimeout(()=> ripple.remove(), 450);
+
+  handleInput(btn.dataset.value);
+});
+
+/* ▼ 計算ロジック（既存） */
 const toFull = s =>
   s.replace(/\*/g,"×")
    .replace(/\//g,"÷");
@@ -351,12 +391,6 @@ function handleInput(value){
   updateInputLine();
 }
 
-keys.addEventListener("click", e=>{
-  const btn = e.target.closest("button");
-  if(!btn) return;
-  handleInput(btn.dataset.value);
-});
-
 historyPanel.addEventListener("click", e=>{
   if(e.target.classList.contains("delete-btn")){
     e.target.parentElement.remove();
@@ -367,10 +401,9 @@ historyPanel.addEventListener("click", e=>{
 updateInputLine();
 updateTotal();
 
-/* Service Worker + 自動更新 */
+/* Service Worker */
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('service-worker.js');
-
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     window.location.reload();
   });
