@@ -183,7 +183,7 @@
   }
 
   /* ---------------------------------------------------------
-     ▼ iPad 横向き（前回のままOK）
+     ▼ iPad 横向き
      --------------------------------------------------------- */
   body.ipad.ipad-landscape .calculator{
     max-width:700px;
@@ -209,11 +209,18 @@
 document.addEventListener("DOMContentLoaded", () => {
   const ua = navigator.userAgent;
 
-  if (ua.includes("iPad")) {
+  // iPad判定（Safariデスクトップ表示でも必ず一致）
+  const isIPad =
+    ua.includes("iPad") ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+  if (isIPad) {
     document.body.classList.add("ipad");
 
-    const portrait = window.matchMedia("(orientation: portrait)").matches;
-    if (portrait) {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+
+    if (h > w) {
       document.body.classList.add("ipad-portrait");
     } else {
       document.body.classList.add("ipad-landscape");
@@ -256,7 +263,7 @@ document.addEventListener("DOMContentLoaded", () => {
 </div>
 
 <script>
-/* JavaScript（計算ロジック）はあなたの完全版のままなので省略なしで動きます */
+/* あなたの計算ロジックはそのまま動くので省略 */
 </script>
 
 </body>
