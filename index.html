@@ -175,7 +175,7 @@
   /* ---------------------------------------------------------
      ▼ iPad 最適化（縦向き）
      --------------------------------------------------------- */
-  @media (min-width: 768px) and (orientation: portrait){
+  @media (min-device-width: 768px) and (max-device-width: 1024px) and (orientation: portrait){
     .calculator{
       max-width:600px;
     }
@@ -191,7 +191,7 @@
   /* ---------------------------------------------------------
      ▼ iPad 最適化（横向き）
      --------------------------------------------------------- */
-  @media (min-width: 768px) and (orientation: landscape){
+  @media (min-device-width: 768px) and (max-device-width: 1024px) and (orientation: landscape){
     .calculator{
       max-width:700px;
       transform:scale(1.1);
