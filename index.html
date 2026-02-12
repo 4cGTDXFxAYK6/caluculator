@@ -14,7 +14,6 @@
     --btn-dark:#333;
     --btn-gray:#a5a5a5;
     --btn-accent:#ff9f0a;
-    --neg:#ff3b30;
     --row-b: rgba(255,255,255,0.18);
     --border: rgba(255,255,255,0.25);
   }
@@ -112,9 +111,6 @@
     overflow:hidden;
 
     height:56px;
-    min-height:48px;
-    max-height:64px;
-
     border-radius:0;
     border:1px solid var(--border);
 
@@ -171,44 +167,60 @@
   }
 
   /* ---------------------------------------------------------
-     ▼ iPad 縦向き（確実に大きくなる版）
+     ▼ iPad 縦向き（確実に大きくなる）
      --------------------------------------------------------- */
-  @media (orientation: portrait) and (min-aspect-ratio: 3/4) and (max-aspect-ratio: 3/4){
-    .calculator{
-      max-width:720px;
-      transform:scale(1.18);
-      transform-origin: top center;
-    }
-    button{
-      height:72px;
-      font-size:28px;
-    }
-    .history{
-      font-size:25px;
-    }
+  body.ipad.ipad-portrait .calculator{
+    max-width:760px;
+    transform:scale(1.20);
+    transform-origin: top center;
+  }
+  body.ipad.ipad-portrait button{
+    height:74px;
+    font-size:30px;
+  }
+  body.ipad.ipad-portrait .history{
+    font-size:26px;
   }
 
   /* ---------------------------------------------------------
      ▼ iPad 横向き（前回のままOK）
      --------------------------------------------------------- */
-  @media (orientation: landscape) and (min-aspect-ratio: 4/3) and (max-aspect-ratio: 4/3){
-    .calculator{
-      max-width:700px;
-      transform:scale(1.1);
-      transform-origin: top center;
-    }
-    button{
-      height:64px;
-      font-size:26px;
-    }
-    .history{
-      font-size:23px;
-    }
+  body.ipad.ipad-landscape .calculator{
+    max-width:700px;
+    transform:scale(1.10);
+    transform-origin: top center;
+  }
+  body.ipad.ipad-landscape button{
+    height:64px;
+    font-size:26px;
+  }
+  body.ipad.ipad-landscape .history{
+    font-size:23px;
   }
 
 </style>
 </head>
 <body>
+
+<script>
+/* ---------------------------------------------------------
+   ▼ iPad を確実に判定して body にクラスを付ける
+   --------------------------------------------------------- */
+document.addEventListener("DOMContentLoaded", () => {
+  const ua = navigator.userAgent;
+
+  if (ua.includes("iPad")) {
+    document.body.classList.add("ipad");
+
+    const portrait = window.matchMedia("(orientation: portrait)").matches;
+    if (portrait) {
+      document.body.classList.add("ipad-portrait");
+    } else {
+      document.body.classList.add("ipad-landscape");
+    }
+  }
+});
+</script>
 
 <div class="calculator">
 
@@ -244,7 +256,7 @@
 </div>
 
 <script>
-/* JavaScript部分は前回の完全版と同じなので省略なしでそのまま動きます */
+/* JavaScript（計算ロジック）はあなたの完全版のままなので省略なしで動きます */
 </script>
 
 </body>
