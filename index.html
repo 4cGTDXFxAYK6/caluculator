@@ -108,6 +108,7 @@ button{
 
 .gray{ background:var(--btn-gray); color:#000; }
 .orange{ background:var(--btn-accent); }
+.dark{ background:var(--btn-dark); }
 .zero{ grid-column:span 2; text-align:left; padding-left:28px; }
 
 /* 押下エフェクト */
@@ -134,7 +135,6 @@ button{
   button{ height:70px; font-size:28px; }
   .history{ font-size:24px; }
 }
-
 </style>
 </head>
 <body>
@@ -173,15 +173,148 @@ button{
 </div>
 
 <script>
-/* 押下エフェクト */
-document.querySelector(".keys").addEventListener("click", e=>{
+/* ------------------------------
+   計算ロジック＋履歴
+------------------------------ */
+let current = "";
+let previous = "";
+let operator = null;
+let historyData = [];
+
+const historyEl = document.getElementById("history");
+const totalBox = document.getElementById("totalBox");
+
+function updateDisplayLine() {
+  // 今回は入力行を別に表示していないので、ここでは何もしない
+}
+
+function addHistoryLine(expr, result) {
+  const item = { expr, result };
+  historyData.push(item);
+  renderHistory();
+  updateTotal();
+}
+
+function renderHistory() {
+  historyEl.innerHTML = "";
+  historyData.forEach((item, index) => {
+    const line = document.createElement("div");
+    line.className = "history-line";
+
+    const text = document.createElement("div");
+    text.className = "text";
+    text.textContent = item.expr + " = " + item.result;
+
+    const del = document.createElement("div");
+    del.className = "delete-btn";
+    del.textContent = "×";
+    del.dataset.index = index;
+
+    line.appendChild(text);
+    line.appendChild(del);
+    historyEl.appendChild(line);
+  });
+}
+
+function updateTotal() {
+  const sum = historyData.reduce((acc, item) => acc + Number(item.result), 0);
+  totalBox.textContent = "合計: " + sum;
+}
+
+function calculate(a, b, op) {
+  const x = Number(a);
+  const y = Number(b);
+  if (op === "+") return x + y;
+  if (op === "-") return x - y;
+  if (op === "*") return x * y;
+  if (op === "/") return y === 0 ? 0 : x / y;
+  return y;
+}
+
+function handleInput(value) {
+  if (!isNaN(value) || value === ".") {
+    if (value === "." && current.includes(".")) return;
+    current += value;
+    updateDisplayLine();
+    return;
+  }
+
+  if (value === "AC") {
+    current = "";
+    previous = "";
+    operator = null;
+    updateDisplayLine();
+    return;
+  }
+
+  if (value === "DEL") {
+    current = current.slice(0, -1);
+    updateDisplayLine();
+    return;
+  }
+
+  if (value === "%") {
+    if (current !== "") {
+      current = String(Number(current) / 100);
+      updateDisplayLine();
+    }
+    return;
+  }
+
+  if (value === "=") {
+    if (previous !== "" && current !== "" && operator) {
+      const result = calculate(previous, current, operator);
+      const expr = previous + " " + operator + " " + current;
+      addHistoryLine(expr, result);
+      current = String(result);
+      previous = "";
+      operator = null;
+      updateDisplayLine();
+    }
+    return;
+  }
+
+  // 演算子
+  if (["+", "-", "*", "/"].includes(value)) {
+    if (current === "" && previous === "") return;
+    if (previous !== "" && current !== "" && operator) {
+      const result = calculate(previous, current, operator);
+      previous = String(result);
+      current = "";
+      operator = value;
+      updateDisplayLine();
+    } else {
+      previous = current || previous;
+      current = "";
+      operator = value;
+      updateDisplayLine();
+    }
+  }
+}
+
+/* ------------------------------
+   ボタンクリック＋押下エフェクト
+------------------------------ */
+document.querySelector(".keys").addEventListener("click", e => {
   const btn = e.target.closest("button");
-  if(!btn) return;
+  if (!btn) return;
+
+  const val = btn.dataset.value;
   btn.classList.add("pressed");
-  setTimeout(()=>btn.classList.remove("pressed"),120);
+  setTimeout(() => btn.classList.remove("pressed"), 120);
+
+  handleInput(val);
 });
 
-/* あなたの計算ロジックはそのまま動くので省略 */
+/* 履歴削除 */
+historyEl.addEventListener("click", e => {
+  const del = e.target.closest(".delete-btn");
+  if (!del) return;
+  const idx = Number(del.dataset.index);
+  historyData.splice(idx, 1);
+  renderHistory();
+  updateTotal();
+});
 </script>
 
 </body>
