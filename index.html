@@ -167,12 +167,10 @@
   }
 
   /* ---------------------------------------------------------
-     ▼ iPad 縦向き（確実に大きくなる）
+     ▼ iPad 縦向き（transform を使わず実寸で拡大）
      --------------------------------------------------------- */
   body.ipad.ipad-portrait .calculator{
     max-width:760px;
-    transform:scale(1.20);
-    transform-origin: top center;
   }
   body.ipad.ipad-portrait button{
     height:74px;
@@ -186,16 +184,14 @@
      ▼ iPad 横向き
      --------------------------------------------------------- */
   body.ipad.ipad-landscape .calculator{
-    max-width:700px;
-    transform:scale(1.10);
-    transform-origin: top center;
+    max-width:900px;
   }
   body.ipad.ipad-landscape button{
-    height:64px;
-    font-size:26px;
+    height:70px;
+    font-size:28px;
   }
   body.ipad.ipad-landscape .history{
-    font-size:23px;
+    font-size:24px;
   }
 
 </style>
@@ -204,12 +200,11 @@
 
 <script>
 /* ---------------------------------------------------------
-   ▼ iPad を確実に判定して body にクラスを付ける
+   ▼ iPad を確実に判定（Safariデスクトップ表示でもOK）
    --------------------------------------------------------- */
 document.addEventListener("DOMContentLoaded", () => {
   const ua = navigator.userAgent;
 
-  // iPad判定（Safariデスクトップ表示でも必ず一致）
   const isIPad =
     ua.includes("iPad") ||
     (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
