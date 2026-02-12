@@ -1,3 +1,363 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<title>履歴付き電卓</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#000000">
+
+<style>
+  :root{
+    --bg:#000;
+    --panel:rgba(255,255,255,0.08);
+    --btn-dark:#333;
+    --btn-gray:#a5a5a5;
+    --btn-accent:#ff9f0a;
+    --neg:#ff3b30;
+    --row-b: rgba(255,255,255,0.18);
+    --border: rgba(255,255,255,0.25);
+  }
+
+  html,body{
+    height:100%;
+    margin:0;
+    background:var(--bg);
+    font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+                 "Helvetica Neue", Arial, sans-serif;
+    touch-action: manipulation;
+  }
+
+  body{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .calculator{
+    width:100%;
+    max-width:600px;
+    margin:auto;
+    padding:16px;
+    padding-bottom:40px;
+    display:flex;
+    flex-direction:column;
+    gap:0;
+    box-sizing:border-box;
+  }
+
+  /* ▼ 履歴欄（フォント21px＋左右8px） */
+  .history{
+    background:var(--panel);
+    backdrop-filter:blur(8px);
+    color:#fff;
+    height:300px;
+    padding:12px 8px;
+    border-radius:14px;
+    overflow:auto;
+    font-size:21px;
+    line-height:1.0;
+    margin-bottom:14px;
+  }
+
+  .history-line{
+    padding:6px 6px;
+    border-radius:4px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    white-space:nowrap;
+    overflow-x:auto;
+    scrollbar-width:none;
+    border-bottom:1px solid rgba(255,255,255,0.18);
+  }
+  .history-line::-webkit-scrollbar{ display:none; }
+  .history-line:nth-child(even){ background:var(--row-b); }
+
+  .text{
+    flex:1;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  .delete-btn{
+    flex-shrink:0;
+    color:var(--btn-accent);
+    font-size:26px;
+    font-weight:700;
+    cursor:pointer;
+    padding:0 8px;
+  }
+
+  .total-box{
+    background:rgba(255,255,255,0.10);
+    backdrop-filter:blur(6px);
+    color:#fff;
+    padding:12px 16px;
+    border-radius:12px;
+    font-size:26px;
+    text-align:right;
+    margin:0;
+  }
+
+  .keys{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:0;
+    width:100%;
+    margin:0;
+  }
+
+  /* ▼ 四角キー＋押下強化＋リップル */
+  button{
+    position:relative;
+    overflow:hidden;
+
+    height:56px;
+    min-height:48px;
+    max-height:64px;
+
+    border-radius:0;
+    border:1px solid var(--border);
+
+    font-size:24px;
+    line-height:1;
+
+    color:#fff;
+    cursor:pointer;
+    user-select:none;
+    font-family:inherit;
+
+    transition:
+      transform 0.05s ease-out,
+      background-color 0.05s ease-out,
+      box-shadow 0.05s ease-out,
+      border-color 0.05s ease-out,
+      color 0.05s ease-out;
+  }
+
+  .pressed{
+    background-color: rgba(255,255,255,0.65);
+    transform: scale(.85);
+    box-shadow:
+      inset 0 0 28px rgba(255,255,255,0.9),
+      0 0 16px rgba(255,255,255,0.6);
+    border-color: var(--btn-accent);
+    color:#000;
+  }
+
+  .ripple{
+    position:absolute;
+    border-radius:50%;
+    background:rgba(255,255,255,0.55);
+    transform:scale(0);
+    animation:ripple-effect 0.45s ease-out;
+    pointer-events:none;
+  }
+
+  @keyframes ripple-effect{
+    to{
+      transform:scale(3.2);
+      opacity:0;
+    }
+  }
+
+  .gray{ background:var(--btn-gray); color:#000; }
+  .dark{ background:var(--btn-dark); }
+  .orange{ background:var(--btn-accent); }
+
+  .zero{
+    grid-column:span 2;
+    text-align:left;
+    padding-left:28px;
+  }
+</style>
+</head>
+<body>
+
+<div class="calculator">
+
+  <div id="history" class="history"></div>
+
+  <div id="totalBox" class="total-box">合計: 0</div>
+
+  <div class="keys">
+    <button class="gray" data-value="DEL">⌫</button>
+    <button class="gray" data-value="AC">AC</button>
+    <button class="gray" data-value="%">%</button>
+    <button class="orange" data-value="/">÷</button>
+
+    <button class="dark" data-value="7">7</button>
+    <button class="dark" data-value="8">8</button>
+    <button class="dark" data-value="9">9</button>
+    <button class="orange" data-value="*">×</button>
+
+    <button class="dark" data-value="4">4</button>
+    <button class="dark" data-value="5">5</button>
+    <button class="dark" data-value="6">6</button>
+    <button class="orange" data-value="-">-</button>
+
+    <button class="dark" data-value="1">1</button>
+    <button class="dark" data-value="2">2</button>
+    <button class="dark" data-value="3">3</button>
+    <button class="orange" data-value="+">+</button>
+
+    <button class="dark zero" data-value="0">0</button>
+    <button class="dark" data-value=".">.</button>
+    <button class="orange" data-value="=">=</button>
+  </div>
+</div>
+
+<script>
+const historyPanel = document.getElementById("history");
+const totalBox = document.getElementById("totalBox");
+const keys = document.querySelector(".keys");
+
+let current = "";
+let previous = "";
+let operator = null;
+let justCalculated = false;
+
+/* ▼ 数字をカンマ付きにする */
+function formatNumber(num){
+  if(num === "" || num === null || num === undefined) return "";
+  const n = Number(num);
+  if(isNaN(n)) return num;
+  return n.toLocaleString("ja-JP");
+}
+
+/* ▼ 押下エフェクト（JS制御） */
+keys.addEventListener("click", e=>{
+  const btn = e.target.closest("button");
+  if(!btn) return;
+
+  btn.classList.add("pressed");
+  setTimeout(()=> btn.classList.remove("pressed"), 120);
+
+  const ripple = document.createElement("span");
+  ripple.classList.add("ripple");
+  const rect = btn.getBoundingClientRect();
+  ripple.style.width = ripple.style.height = Math.max(rect.width, rect.height) + "px";
+  ripple.style.left = (e.clientX - rect.left - rect.width/2) + "px";
+  ripple.style.top = (e.clientY - rect.top - rect.height/2) + "px";
+  btn.appendChild(ripple);
+  setTimeout(()=> ripple.remove(), 450);
+
+  handleInput(btn.dataset.value);
+});
+
+/* ▼ 計算ロジック */
+const toFull = s =>
+  s.replace(/\*/g,"×")
+   .replace(/\//g,"÷");
+
+function updateTotal(){
+  let sum = 0;
+  const lines = historyPanel.querySelectorAll('.history-line[data-type="history"]');
+
+  lines.forEach(line=>{
+    const text = line.querySelector(".text").textContent;
+    const result = text.split("=").pop().trim().replace(/,/g,"");
+    const num = Number(result);
+    if(!isNaN(num)) sum += num;
+  });
+
+  totalBox.textContent = "合計: " + formatNumber(sum);
+}
+
+function updateInputLine(){
+  let last = historyPanel.lastElementChild;
+
+  if(!last || last.dataset.type !== "input"){
+    last = document.createElement("div");
+    last.className = "history-line";
+    last.dataset.type = "input";
+
+    const text = document.createElement("span");
+    text.className = "text";
+    last.appendChild(text);
+
+    historyPanel.appendChild(last);
+  }
+
+  const text = last.querySelector(".text");
+
+  let expr = "";
+  if(previous && operator){
+    expr = `${formatNumber(previous)} ${toFull(operator)} ${formatNumber(current)}`;
+  } else {
+    expr = formatNumber(current || "0");
+  }
+
+  text.textContent = expr;
+  historyPanel.scrollTop = historyPanel.scrollHeight;
+}
+
+function finalizeToHistory(expr, result, isSingleNumber = false){
+  let line = historyPanel.lastElementChild;
+
+  if(!line || line.dataset.type !== "input"){
+    line = document.createElement("div");
+    line.className = "history-line";
+    historyPanel.appendChild(line);
+  }
+
+  line.dataset.type = "history";
+
+  if(isSingleNumber){
+    line.innerHTML = `
+      <span class="text">${formatNumber(expr)}</span>
+      <span class="delete-btn">×</span>
+    `;
+  } else {
+    const [a,op,b] = expr.split(/([+\-*/])/);
+    line.innerHTML = `
+      <span class="text">${formatNumber(a)} ${toFull(op)} ${formatNumber(b)} = ${formatNumber(result)}</span>
+      <span class="delete-btn">×</span>
+    `;
+  }
+
+  historyPanel.scrollTop = historyPanel.scrollHeight;
+  updateTotal();
+}
+
+function resetAll(){
+  current = "";
+  previous = "";
+  operator = null;
+  justCalculated = false;
+  historyPanel.innerHTML = "";
+  updateInputLine();
+  updateTotal();
+}
+
+function calculate(){
+  if(!operator && current !== ""){
+    finalizeToHistory(current, current, true);
+    current = "";
+    previous = "";
+    operator = null;
+    justCalculated = true;
+    updateInputLine();
+    return;
+  }
+
+  if(operator && previous !== "" && current !== ""){
+    const expr = previous + operator + current;
+    const result = String(eval(expr));
+
+    finalizeToHistory(expr, result, false);
+
+    current = "";
+    previous = "";
+    operator = null;
+    justCalculated = true;
+
+    updateInputLine();
+  }
+}
+
+/* ▼ 小数点の多重入力防止（今回の修正） */
 function handleInput(value){
   if(justCalculated){
     if(!isNaN(value) || value === ".") current = "";
@@ -21,10 +381,10 @@ function handleInput(value){
     return;
   }
 
-  /* ▼ 小数点の多重入力を防ぐ（重要） */
+  /* ▼ 小数点の多重入力を防ぐ */
   if(value === "."){
-    if(current.includes(".")) return;  // ← これで2回目以降の . を無視
-    if(current === "") current = "0";  // ← 最初が . の場合は 0. にする
+    if(current.includes(".")) return;
+    if(current === "") current = "0";
     current += ".";
     updateInputLine();
     return;
@@ -46,3 +406,25 @@ function handleInput(value){
   current += value;
   updateInputLine();
 }
+
+historyPanel.addEventListener("click", e=>{
+  if(e.target.classList.contains("delete-btn")){
+    e.target.parentElement.remove();
+    updateTotal();
+  }
+});
+
+updateInputLine();
+updateTotal();
+
+/* Service Worker */
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('service-worker.js');
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    window.location.reload();
+  });
+}
+</script>
+
+</body>
+</html>
