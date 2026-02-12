@@ -4,225 +4,140 @@
 <meta charset="utf-8" />
 <title>履歴付き電卓</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#000000">
 
 <style>
-  :root{
-    --bg:#000;
-    --panel:rgba(255,255,255,0.08);
-    --btn-dark:#333;
-    --btn-gray:#a5a5a5;
-    --btn-accent:#ff9f0a;
-    --row-b: rgba(255,255,255,0.18);
-    --border: rgba(255,255,255,0.25);
-  }
+/* ------------------------------
+   基本スタイル
+------------------------------ */
+:root{
+  --bg:#000;
+  --panel:rgba(255,255,255,0.08);
+  --btn-dark:#333;
+  --btn-gray:#a5a5a5;
+  --btn-accent:#ff9f0a;
+  --border:rgba(255,255,255,0.25);
+  --row-b:rgba(255,255,255,0.18);
+}
 
-  html,body{
-    height:100%;
-    margin:0;
-    background:var(--bg);
-    font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
-                 "Helvetica Neue", Arial, sans-serif;
-    touch-action: manipulation;
-  }
+html,body{
+  margin:0;
+  height:100%;
+  background:var(--bg);
+  font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+}
 
-  body{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-  }
+body{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
 
-  .calculator{
-    width:100%;
-    max-width:600px;
-    margin:auto;
-    padding:16px;
-    padding-bottom:40px;
-    display:flex;
-    flex-direction:column;
-    gap:0;
-    box-sizing:border-box;
-  }
+.calculator{
+  width:100%;
+  max-width:600px;
+  padding:16px;
+  box-sizing:border-box;
+  display:flex;
+  flex-direction:column;
+}
 
-  .history{
-    background:var(--panel);
-    backdrop-filter:blur(8px);
-    color:#fff;
-    height:300px;
-    padding:12px 8px;
-    border-radius:14px;
-    overflow:auto;
-    font-size:21px;
-    line-height:1.0;
-    margin-bottom:14px;
-  }
+/* ------------------------------
+   履歴
+------------------------------ */
+.history{
+  background:var(--panel);
+  color:#fff;
+  height:300px;
+  padding:12px 8px;
+  border-radius:14px;
+  overflow:auto;
+  font-size:21px;
+  margin-bottom:14px;
+}
 
-  .history-line{
-    padding:6px 6px;
-    border-radius:4px;
-    display:flex;
-    align-items:center;
-    gap:10px;
-    white-space:nowrap;
-    overflow-x:auto;
-    scrollbar-width:none;
-    border-bottom:1px solid rgba(255,255,255,0.18);
-  }
-  .history-line::-webkit-scrollbar{ display:none; }
-  .history-line:nth-child(even){ background:var(--row-b); }
+.history-line{
+  padding:6px;
+  display:flex;
+  align-items:center;
+  border-bottom:1px solid rgba(255,255,255,0.18);
+}
 
-  .text{
-    flex:1;
-    overflow:hidden;
-    text-overflow:ellipsis;
-  }
+.text{
+  flex:1;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
 
-  .delete-btn{
-    flex-shrink:0;
-    color:var(--btn-accent);
-    font-size:26px;
-    font-weight:700;
-    cursor:pointer;
-    padding:0 8px;
-  }
+.delete-btn{
+  color:var(--btn-accent);
+  font-size:26px;
+  cursor:pointer;
+}
 
-  .total-box{
-    background:rgba(255,255,255,0.10);
-    backdrop-filter:blur(6px);
-    color:#fff;
-    padding:12px 16px;
-    border-radius:12px;
-    font-size:26px;
-    text-align:right;
-    margin:0;
-  }
+/* ------------------------------
+   合計
+------------------------------ */
+.total-box{
+  background:rgba(255,255,255,0.10);
+  color:#fff;
+  padding:12px 16px;
+  border-radius:12px;
+  font-size:26px;
+  text-align:right;
+  margin-bottom:10px;
+}
 
-  .keys{
-    display:grid;
-    grid-template-columns:repeat(4, 1fr);
-    gap:0;
-    width:100%;
-    margin:0;
-  }
+/* ------------------------------
+   ボタン
+------------------------------ */
+.keys{
+  display:grid;
+  grid-template-columns:repeat(4, 1fr);
+}
 
-  button{
-    position:relative;
-    overflow:hidden;
+button{
+  height:56px;
+  border:1px solid var(--border);
+  background:#333;
+  color:#fff;
+  font-size:24px;
+  position:relative;
+  overflow:hidden;
+}
 
-    height:56px;
-    border-radius:0;
-    border:1px solid var(--border);
+.gray{ background:var(--btn-gray); color:#000; }
+.orange{ background:var(--btn-accent); }
+.zero{ grid-column:span 2; text-align:left; padding-left:28px; }
 
-    font-size:24px;
-    line-height:1;
+/* 押下エフェクト */
+.pressed{
+  background:rgba(255,255,255,0.65);
+  color:#000;
+  transform:scale(0.85);
+}
 
-    color:#fff;
-    cursor:pointer;
-    user-select:none;
-    font-family:inherit;
+/* ------------------------------
+   iPad 縦向き
+------------------------------ */
+@media (min-width:768px) and (orientation:portrait){
+  .calculator{ max-width:760px; }
+  button{ height:74px; font-size:30px; }
+  .history{ font-size:26px; }
+}
 
-    transition:
-      transform 0.05s ease-out,
-      background-color 0.05s ease-out,
-      box-shadow 0.05s ease-out,
-      border-color 0.05s ease-out,
-      color 0.05s ease-out;
-  }
-
-  .pressed{
-    background-color: rgba(255,255,255,0.65);
-    transform: scale(.85);
-    box-shadow:
-      inset 0 0 28px rgba(255,255,255,0.9),
-      0 0 16px rgba(255,255,255,0.6);
-    border-color: var(--btn-accent);
-    color:#000;
-  }
-
-  .ripple{
-    position:absolute;
-    border-radius:50%;
-    background:rgba(255,255,255,0.55);
-    transform:scale(0);
-    animation:ripple-effect 0.45s ease-out;
-    pointer-events:none;
-  }
-
-  @keyframes ripple-effect{
-    to{
-      transform:scale(3.2);
-      opacity:0;
-    }
-  }
-
-  .gray{ background:var(--btn-gray); color:#000; }
-  .dark{ background:var(--btn-dark); }
-  .orange{ background:var(--btn-accent); }
-
-  .zero{
-    grid-column:span 2;
-    text-align:left;
-    padding-left:28px;
-  }
-
-  /* ---------------------------------------------------------
-     ▼ iPad 縦向き（transform を使わず実寸で拡大）
-     --------------------------------------------------------- */
-  body.ipad.ipad-portrait .calculator{
-    max-width:760px;
-  }
-  body.ipad.ipad-portrait button{
-    height:74px;
-    font-size:30px;
-  }
-  body.ipad.ipad-portrait .history{
-    font-size:26px;
-  }
-
-  /* ---------------------------------------------------------
-     ▼ iPad 横向き
-     --------------------------------------------------------- */
-  body.ipad.ipad-landscape .calculator{
-    max-width:900px;
-  }
-  body.ipad.ipad-landscape button{
-    height:70px;
-    font-size:28px;
-  }
-  body.ipad.ipad-landscape .history{
-    font-size:24px;
-  }
+/* ------------------------------
+   iPad 横向き
+------------------------------ */
+@media (min-width:1024px) and (orientation:landscape){
+  .calculator{ max-width:900px; }
+  button{ height:70px; font-size:28px; }
+  .history{ font-size:24px; }
+}
 
 </style>
 </head>
 <body>
-
-<script>
-/* ---------------------------------------------------------
-   ▼ iPad を確実に判定（Safariデスクトップ表示でもOK）
-   --------------------------------------------------------- */
-document.addEventListener("DOMContentLoaded", () => {
-  const ua = navigator.userAgent;
-
-  const isIPad =
-    ua.includes("iPad") ||
-    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-
-  if (isIPad) {
-    document.body.classList.add("ipad");
-
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-
-    if (h > w) {
-      document.body.classList.add("ipad-portrait");
-    } else {
-      document.body.classList.add("ipad-landscape");
-    }
-  }
-});
-</script>
 
 <div class="calculator">
 
@@ -258,6 +173,14 @@ document.addEventListener("DOMContentLoaded", () => {
 </div>
 
 <script>
+/* 押下エフェクト */
+document.querySelector(".keys").addEventListener("click", e=>{
+  const btn = e.target.closest("button");
+  if(!btn) return;
+  btn.classList.add("pressed");
+  setTimeout(()=>btn.classList.remove("pressed"),120);
+});
+
 /* あなたの計算ロジックはそのまま動くので省略 */
 </script>
 
