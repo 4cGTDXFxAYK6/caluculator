@@ -219,7 +219,7 @@
 </div>
 
 <script>
-/* ▼ あなたの計算ロジック（完全統合） */
+/* ▼ 計算ロジック（小数点保持版） */
 
 const historyPanel = document.getElementById("history");
 const totalBox = document.getElementById("totalBox");
@@ -230,15 +230,24 @@ let previous = "";
 let operator = null;
 let justCalculated = false;
 
-/* ▼ 数字をカンマ付きにする */
+/* ▼ 小数点以下を丸めず保持する formatNumber */
 function formatNumber(num){
   if(num === "" || num === null || num === undefined) return "";
-  const n = Number(num);
-  if(isNaN(n)) return num;
-  return n.toLocaleString("ja-JP");
+
+  if(isNaN(Number(num))) return num;
+
+  const str = String(num);
+
+  if(str.includes(".")){
+    const [intPart, decPart] = str.split(".");
+    const intFormatted = Number(intPart).toLocaleString("ja-JP");
+    return intFormatted + "." + decPart;
+  }
+
+  return Number(str).toLocaleString("ja-JP");
 }
 
-/* ▼ 押下エフェクト（軽量版 ripple） */
+/* ▼ 軽量 ripple */
 keys.addEventListener("click", e=>{
   const btn = e.target.closest("button");
   if(!btn) return;
@@ -360,7 +369,6 @@ function calculate(){
   }
 }
 
-/* ▼ 小数点の多重入力防止 */
 function handleInput(value){
   if(justCalculated){
     if(!isNaN(value) || value === ".") current = "";
