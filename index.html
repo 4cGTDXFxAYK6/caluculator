@@ -14,6 +14,7 @@
     --btn-dark:#333;
     --btn-gray:#a5a5a5;
     --btn-accent:#ff9f0a;
+    --btn-accent2:#ffb347;
     --border:rgba(255,255,255,0.25);
     --row-b:rgba(255,255,255,0.18);
   }
@@ -128,7 +129,7 @@
       color 0.05s ease-out;
   }
 
-  /* ▼ 軽量版 ripple（CSSのみ） */
+  /* ▼ 軽量 ripple（CSSのみ） */
   button::after{
     content:"";
     position:absolute;
@@ -159,9 +160,21 @@
     color:#000;
   }
 
+  /* ▼ 四則キー & ＝キー強調デザイン */
+  .op, .equal {
+    background: linear-gradient(var(--btn-accent2), var(--btn-accent));
+    font-size:30px;
+    font-weight:700;
+    border:2px solid rgba(255,255,255,0.35);
+    color:#000;
+  }
+
+  .equal{
+    font-size:32px;
+  }
+
   .gray{ background:var(--btn-gray); color:#000; }
   .dark{ background:var(--btn-dark); }
-  .orange{ background:var(--btn-accent); }
 
   .zero{
     grid-column:span 2;
@@ -195,26 +208,26 @@
     <button class="gray" data-value="DEL">⌫</button>
     <button class="gray" data-value="AC">AC</button>
     <button class="gray" data-value="%">%</button>
-    <button class="orange" data-value="/">÷</button>
+    <button class="op" data-value="/">÷</button>
 
     <button class="dark" data-value="7">7</button>
     <button class="dark" data-value="8">8</button>
     <button class="dark" data-value="9">9</button>
-    <button class="orange" data-value="*">×</button>
+    <button class="op" data-value="*">×</button>
 
     <button class="dark" data-value="4">4</button>
     <button class="dark" data-value="5">5</button>
     <button class="dark" data-value="6">6</button>
-    <button class="orange" data-value="-">-</button>
+    <button class="op" data-value="-">−</button>
 
     <button class="dark" data-value="1">1</button>
     <button class="dark" data-value="2">2</button>
     <button class="dark" data-value="3">3</button>
-    <button class="orange" data-value="+">+</button>
+    <button class="op" data-value="+">＋</button>
 
     <button class="dark zero" data-value="0">0</button>
     <button class="dark" data-value=".">.</button>
-    <button class="orange" data-value="=">=</button>
+    <button class="equal" data-value="=">=</button>
   </div>
 </div>
 
