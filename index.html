@@ -128,30 +128,35 @@
       color 0.05s ease-out;
   }
 
+  /* ▼ 軽量版 ripple（CSSのみ） */
+  button::after{
+    content:"";
+    position:absolute;
+    left:50%;
+    top:50%;
+    width:0;
+    height:0;
+    background:rgba(255,255,255,0.45);
+    border-radius:50%;
+    transform:translate(-50%,-50%);
+    opacity:0;
+    transition:width .35s ease-out, height .35s ease-out, opacity .35s ease-out;
+  }
+
+  button.pressed::after{
+    width:180%;
+    height:180%;
+    opacity:1;
+  }
+
   /* transform を完全排除した押下エフェクト */
   .pressed{
     background-color: rgba(255,255,255,0.65);
     box-shadow:
-      inset 0 0 28px rgba(255,255,255,0.9),
-      0 0 16px rgba(255,255,255,0.6);
+      inset 0 0 18px rgba(255,255,255,0.9),
+      0 0 10px rgba(255,255,255,0.6);
     border-color: var(--btn-accent);
     color:#000;
-  }
-
-  .ripple{
-    position:absolute;
-    border-radius:50%;
-    background:rgba(255,255,255,0.55);
-    transform:scale(0);
-    animation:ripple-effect 0.45s ease-out;
-    pointer-events:none;
-  }
-
-  @keyframes ripple-effect{
-    to{
-      transform:scale(3.2);
-      opacity:0;
-    }
   }
 
   .gray{ background:var(--btn-gray); color:#000; }
@@ -214,7 +219,7 @@
 </div>
 
 <script>
-/* ▼ あなたの計算ロジック（完全統合版） */
+/* ▼ あなたの計算ロジック（完全統合） */
 
 const historyPanel = document.getElementById("history");
 const totalBox = document.getElementById("totalBox");
@@ -233,22 +238,13 @@ function formatNumber(num){
   return n.toLocaleString("ja-JP");
 }
 
-/* ▼ 押下エフェクト（JS制御） */
+/* ▼ 押下エフェクト（軽量版 ripple） */
 keys.addEventListener("click", e=>{
   const btn = e.target.closest("button");
   if(!btn) return;
 
   btn.classList.add("pressed");
-  setTimeout(()=> btn.classList.remove("pressed"), 120);
-
-  const ripple = document.createElement("span");
-  ripple.classList.add("ripple");
-  const rect = btn.getBoundingClientRect();
-  ripple.style.width = ripple.style.height = Math.max(rect.width, rect.height) + "px";
-  ripple.style.left = (e.clientX - rect.left - rect.width/2) + "px";
-  ripple.style.top = (e.clientY - rect.top - rect.height/2) + "px";
-  btn.appendChild(ripple);
-  setTimeout(()=> ripple.remove(), 450);
+  setTimeout(()=> btn.classList.remove("pressed"), 180);
 
   handleInput(btn.dataset.value);
 });
