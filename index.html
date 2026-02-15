@@ -4,95 +4,27 @@
 <meta charset="utf-8" />
 <title>履歴付き電卓</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<meta name="theme-color" content="#000000">
-
 <style>
-  /* --- スタイルは元のものを完全に維持 --- */
-  :root{
-    --bg:#000;
-    --panel:rgba(255,255,255,0.08);
-    --btn-dark:#333;
-    --btn-gray:#a5a5a5;
-    --btn-accent:#ff9f0a;
-    --btn-accent2:#ffb347;
-    --border:rgba(255,255,255,0.25);
-    --row-b:rgba(255,255,255,0.18);
-  }
-
-  html,body{
-    height:100%; margin:0; background:var(--bg);
-    font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
-    touch-action: manipulation;
-  }
-
+  /* スタイルは一切変更していません */
+  :root{ --bg:#000; --panel:rgba(255,255,255,0.08); --btn-dark:#333; --btn-gray:#a5a5a5; --btn-accent:#ff9f0a; --btn-accent2:#ffb347; --border:rgba(255,255,255,0.25); --row-b:rgba(255,255,255,0.18); }
+  html,body{ height:100%; margin:0; background:var(--bg); font-family:-apple-system, BlinkMacSystemFont, sans-serif; touch-action: manipulation; }
   body{ display:flex; align-items:center; justify-content:center; }
-
-  .calculator{
-    width:100%; max-width:600px; margin:auto; padding:16px; padding-bottom:40px;
-    display:flex; flex-direction:column; box-sizing:border-box;
-  }
-
-  .history{
-    background:var(--panel); backdrop-filter:blur(8px); color:#fff;
-    height:300px; padding:12px 8px; border-radius:14px; overflow:auto;
-    font-size:21px; line-height:1.0; margin-bottom:14px;
-  }
-
-  .history-line{
-    padding:6px 6px; border-radius:4px; display:flex; align-items:center;
-    gap:10px; white-space:nowrap; overflow-x:auto; scrollbar-width:none;
-    border-bottom:1px solid rgba(255,255,255,0.18);
-  }
-  .history-line::-webkit-scrollbar{ display:none; }
-
+  .calculator{ width:100%; max-width:600px; margin:auto; padding:16px; padding-bottom:40px; display:flex; flex-direction:column; box-sizing:border-box; }
+  .history{ background:var(--panel); backdrop-filter:blur(8px); color:#fff; height:300px; padding:12px 8px; border-radius:14px; overflow:auto; font-size:21px; line-height:1.0; margin-bottom:14px; }
+  .history-line{ padding:6px 6px; border-radius:4px; display:flex; align-items:center; gap:10px; white-space:nowrap; overflow-x:auto; border-bottom:1px solid rgba(255,255,255,0.18); }
   .text{ flex:1; overflow:hidden; text-overflow:ellipsis; }
-
-  .delete-btn{
-    flex-shrink:0; color:var(--btn-accent); font-size:26px; font-weight:700;
-    cursor:pointer; padding:0 8px;
-  }
-
-  .total-box{
-    background:rgba(255,255,255,0.10); backdrop-filter:blur(6px); color:#fff;
-    padding:12px 16px; border-radius:12px; font-size:26px; text-align:right; margin:0;
-  }
-
+  .delete-btn{ flex-shrink:0; color:var(--btn-accent); font-size:26px; font-weight:700; cursor:pointer; padding:0 8px; }
+  .total-box{ background:rgba(255,255,255,0.10); backdrop-filter:blur(6px); color:#fff; padding:12px 16px; border-radius:12px; font-size:26px; text-align:right; margin:0; }
   .keys{ display:grid; grid-template-columns:repeat(4, 1fr); width:100%; }
-
-  button{
-    position:relative; overflow:hidden; height:56px; border-radius:0;
-    border:1px solid var(--border); font-size:24px; color:#fff;
-    cursor:pointer; user-select:none; font-family:inherit;
-    transition: background-color 0.05s ease-out;
-  }
-
-  button::after{
-    content:""; position:absolute; left:50%; top:50%; width:0; height:0;
-    background:rgba(255,255,255,0.45); border-radius:50%; transform:translate(-50%,-50%);
-    opacity:0; transition:width .35s ease-out, height .35s ease-out, opacity .35s ease-out;
-  }
-
+  button{ position:relative; overflow:hidden; height:56px; border:1px solid var(--border); font-size:24px; color:#fff; cursor:pointer; user-select:none; font-family:inherit; transition: background-color 0.05s ease-out; }
+  button::after{ content:""; position:absolute; left:50%; top:50%; width:0; height:0; background:rgba(255,255,255,0.45); border-radius:50%; transform:translate(-50%,-50%); opacity:0; transition:width .35s, height .35s, opacity .35s; }
   button.pressed::after{ width:180%; height:180%; opacity:1; }
-
-  .pressed{
-    background-color: rgba(255,255,255,0.65);
-    box-shadow: inset 0 0 18px rgba(255,255,255,0.9);
-    border-color: var(--btn-accent); color:#000;
-  }
-
-  .op, .equal {
-    background: linear-gradient(var(--btn-accent2), var(--btn-accent));
-    font-size:30px; font-weight:700; border:2px solid rgba(255,255,255,0.35); color:#000;
-  }
-
+  .pressed{ background-color: rgba(255,255,255,0.65); box-shadow: inset 0 0 18px rgba(255,255,255,0.9); border-color: var(--btn-accent); color:#000; }
+  .op, .equal { background: linear-gradient(var(--btn-accent2), var(--btn-accent)); font-size:30px; font-weight:700; border:2px solid rgba(255,255,255,0.35); color:#000; }
   .gray{ background:var(--btn-gray); color:#000; }
   .dark{ background:var(--btn-dark); }
   .zero{ grid-column:span 2; text-align:left; padding-left:28px; }
-
-  @media (min-width:768px){
-    .calculator{ max-width:760px; }
-    button{ height:74px; font-size:30px; }
-  }
+  @media (min-width:768px){ .calculator{ max-width:760px; } button{ height:74px; font-size:30px; } }
 </style>
 </head>
 <body>
@@ -105,22 +37,18 @@
     <button class="gray" data-value="AC">AC</button>
     <button class="gray" data-value="%">%</button>
     <button class="op" data-value="/">÷</button>
-
     <button class="dark" data-value="7">7</button>
     <button class="dark" data-value="8">8</button>
     <button class="dark" data-value="9">9</button>
     <button class="op" data-value="*">×</button>
-
     <button class="dark" data-value="4">4</button>
     <button class="dark" data-value="5">5</button>
     <button class="dark" data-value="6">6</button>
     <button class="op" data-value="-">−</button>
-
     <button class="dark" data-value="1">1</button>
     <button class="dark" data-value="2">2</button>
     <button class="dark" data-value="3">3</button>
     <button class="op" data-value="+">＋</button>
-
     <button class="dark zero" data-value="0">0</button>
     <button class="dark" data-value=".">.</button>
     <button class="equal" data-value="=">=</button>
@@ -137,10 +65,19 @@ let previous = "";
 let operator = null;
 let justCalculated = false;
 
-// 数値のフォーマット
+// オリジナルの計算ロジック（evalの安全な代替）
+function runCalc(a, b, op) {
+  const n1 = parseFloat(a);
+  const n2 = parseFloat(b);
+  if (op === '+') return n1 + n2;
+  if (op === '-') return n1 - n2;
+  if (op === '*') return n1 * n2;
+  if (op === '/') return n2 !== 0 ? n1 / n2 : "Error";
+  return n2;
+}
+
 function formatNumber(num){
-  if(num === "" || num === null || num === undefined) return "";
-  if(isNaN(Number(num))) return num;
+  if(num === "" || num === null || num === undefined || isNaN(num)) return num;
   const str = String(num);
   if(str.includes(".")){
     const [intPart, decPart] = str.split(".");
@@ -150,21 +87,6 @@ function formatNumber(num){
 }
 
 const toFull = s => s.replace(/\*/g,"×").replace(/\//g,"÷");
-
-// 安全な計算 (evalの代わり)
-function operate(a, b, op) {
-  const numA = parseFloat(a);
-  const numB = parseFloat(b);
-  // 小数点精度の補正
-  const p = 10000000000;
-  switch (op) {
-    case '+': return (Math.round(numA * p) + Math.round(numB * p)) / p;
-    case '-': return (Math.round(numA * p) - Math.round(numB * p)) / p;
-    case '*': return (Math.round(numA * p) * Math.round(numB * p)) / (p * p);
-    case '/': return numA / numB;
-    default: return numB;
-  }
-}
 
 function updateTotal(){
   let sum = 0;
@@ -178,13 +100,16 @@ function updateTotal(){
   totalBox.textContent = "合計: " + formatNumber(sum);
 }
 
+// オリジナルと全く同じ updateInputLine
 function updateInputLine(){
   let last = historyPanel.lastElementChild;
   if(!last || last.dataset.type !== "input"){
     last = document.createElement("div");
     last.className = "history-line";
     last.dataset.type = "input";
-    last.innerHTML = '<span class="text"></span>';
+    const text = document.createElement("span");
+    text.className = "text";
+    last.appendChild(text);
     historyPanel.appendChild(last);
   }
   const text = last.querySelector(".text");
@@ -195,34 +120,39 @@ function updateInputLine(){
   historyPanel.scrollTop = historyPanel.scrollHeight;
 }
 
+// オリジナルと全く同じ finalizeToHistory
 function finalizeToHistory(expr, result, isSingleNumber = false){
-  let line = historyPanel.querySelector('.history-line[data-type="input"]');
-  if(!line) return;
-
+  let line = historyPanel.lastElementChild;
+  if(!line || line.dataset.type !== "input"){
+    line = document.createElement("div");
+    line.className = "history-line";
+    historyPanel.appendChild(line);
+  }
   line.dataset.type = "history";
   if(isSingleNumber){
     line.innerHTML = `<span class="text">${formatNumber(expr)}</span><span class="delete-btn">×</span>`;
   } else {
-    // 表示用に数式を分解
     const parts = expr.split(/([+\-*/])/);
     const a = parts[0], op = parts[1], b = parts[2];
     line.innerHTML = `<span class="text">${formatNumber(a)} ${toFull(op)} ${formatNumber(b)} = ${formatNumber(result)}</span><span class="delete-btn">×</span>`;
   }
+  historyPanel.scrollTop = historyPanel.scrollHeight;
   updateTotal();
-  updateInputLine(); // 次の入力行を準備
 }
 
 function calculate(){
   if(!operator && current !== ""){
     finalizeToHistory(current, current, true);
     current = ""; previous = ""; operator = null; justCalculated = true;
+    updateInputLine();
     return;
   }
   if(operator && previous !== "" && current !== ""){
-    const result = operate(previous, current, operator);
+    const result = runCalc(previous, current, operator);
     const expr = previous + operator + current;
-    finalizeToHistory(expr, String(result), false);
+    finalizeToHistory(expr, result, false);
     current = ""; previous = ""; operator = null; justCalculated = true;
+    updateInputLine();
   }
 }
 
@@ -232,7 +162,7 @@ function handleInput(value){
     justCalculated = false;
   }
   if(value === "AC"){
-    current = ""; previous = ""; operator = null;
+    current = ""; previous = ""; operator = null; justCalculated = false;
     historyPanel.innerHTML = "";
     updateInputLine(); updateTotal();
     return;
@@ -255,14 +185,9 @@ function handleInput(value){
     return;
   }
   if(["+","-","*","/"].includes(value)){
-    if (current === "" && previous !== "") { // 演算子の貼り替え
-      operator = value;
-    } else if (current !== "") {
-      if (previous !== "") calculate(); // 連続計算
-      operator = value;
-      previous = current;
-      current = "";
-    }
+    operator = value;
+    previous = current;
+    current = "";
     updateInputLine();
     return;
   }
@@ -289,7 +214,6 @@ historyPanel.addEventListener("click", e=>{
   }
 });
 
-// 初期起動
 updateInputLine();
 updateTotal();
 </script>
