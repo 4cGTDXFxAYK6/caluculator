@@ -2,35 +2,74 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8" />
-<title>履歴付き電卓 (高速レスポンス版)</title>
+<title>Pro-Refactored Calculator</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <style>
-  :root{ --bg:#000; --panel:rgba(255,255,255,0.08); --btn-dark:#333; --btn-gray:#a5a5a5; --btn-accent:#ff9f0a; --btn-accent2:#ffb347; --border:rgba(255,255,255,0.25); }
-  html,body{ height:100%; margin:0; background:var(--bg); font-family:-apple-system, BlinkMacSystemFont, sans-serif; overflow:hidden; touch-action:none; }
-  body{ display:flex; align-items:center; justify-content:center; }
-  .calculator{ width:100%; max-width:600px; padding:16px; display:flex; flex-direction:column; box-sizing:border-box; }
-  .history{ background:var(--panel); backdrop-filter:blur(8px); color:#fff; height:280px; padding:12px 8px; border-radius:14px; overflow-y:auto; font-size:21px; margin-bottom:14px; -webkit-overflow-scrolling: touch; }
-  .history-line{ padding:8px 6px; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:space-between; }
-  .text{ flex:1; white-space:nowrap; overflow-x:auto; scrollbar-width:none; }
-  .text::-webkit-scrollbar{ display:none; }
-  .delete-btn{ color:var(--btn-accent); font-size:24px; font-weight:bold; padding:0 10px; cursor:pointer; }
-  .total-box{ background:rgba(255,255,255,0.1); color:#fff; padding:12px 16px; border-radius:12px; font-size:26px; text-align:right; margin-bottom:10px; }
-  .keys{ display:grid; grid-template-columns:repeat(4, 1fr); gap:1px; background:var(--border); border:1px solid var(--border); }
-  
-  button{
-    height:65px; border:none; font-size:24px; color:#fff; font-family:inherit;
-    background:var(--btn-dark); cursor:pointer; outline:none;
-    -webkit-tap-highlight-color: transparent;
+  :root {
+    --bg: #000;
+    --panel: rgba(255, 255, 255, 0.08);
+    --btn-dark: #333;
+    --btn-gray: #a5a5a5;
+    --btn-accent: #ff9f0a;
+    --btn-accent2: #ffb347;
+    --border: rgba(255, 255, 255, 0.25);
   }
-  /* 触れた瞬間の反応 */
-  button:active { filter: brightness(1.5); background-color: #666; }
-  .op, .equal { background: var(--btn-accent); color:#000; font-weight:bold; font-size:28px; }
-  .op:active, .equal:active { background: var(--btn-accent2); }
-  .gray{ background:var(--btn-gray); color:#000; }
-  .gray:active { background: #ccc; }
-  .zero{ grid-column:span 2; text-align:left; padding-left:30px; }
 
-  @media (min-width:768px){ button{ height:80px; font-size:30px; } }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    height: 100%; margin: 0; background: var(--bg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    overflow: hidden; touch-action: none;
+  }
+
+  body { display: flex; align-items: center; justify-content: center; }
+
+  .calculator {
+    width: 100%; max-width: 600px; padding: 16px;
+    display: flex; flex-direction: column; height: 100%; max-height: 900px;
+  }
+
+  /* --- Display Area --- */
+  .history {
+    background: var(--panel); backdrop-filter: blur(10px); color: #fff;
+    flex: 1; min-height: 200px; padding: 12px; border-radius: 16px;
+    overflow-y: auto; font-size: 22px; margin-bottom: 12px;
+    scrollbar-width: none;
+  }
+  .history::-webkit-scrollbar { display: none; }
+
+  .history-line {
+    padding: 10px 6px; border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex; align-items: center; justify-content: space-between;
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  .text { flex: 1; white-space: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .delete-btn { color: var(--btn-accent); font-size: 26px; font-weight: bold; padding: 0 12px; cursor: pointer; }
+
+  .total-box {
+    background: rgba(255, 255, 255, 0.1); color: #fff;
+    padding: 14px 18px; border-radius: 14px; font-size: 28px;
+    text-align: right; margin-bottom: 12px; font-weight: 500;
+  }
+
+  /* --- Keypad Area --- */
+  .keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); }
+
+  button {
+    height: 70px; border: none; font-size: 26px; color: #fff;
+    background: var(--btn-dark); cursor: pointer; outline: none;
+    transition: filter 0.1s;
+  }
+  button:active { filter: brightness(1.6); background-color: #555; }
+
+  .op, .equal { background: var(--btn-accent); color: #000; font-weight: 600; font-size: 30px; }
+  .gray { background: var(--btn-gray); color: #000; }
+  .zero { grid-column: span 2; text-align: left; padding-left: 35px; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+  @media (min-width: 768px) { button { height: 90px; font-size: 34px; } }
 </style>
 </head>
 <body>
@@ -39,142 +78,171 @@
   <div id="history" class="history"></div>
   <div id="totalBox" class="total-box">合計: 0</div>
   <div class="keys" id="keypad">
-    <button class="gray" data-value="DEL">⌫</button>
-    <button class="gray" data-value="AC">AC</button>
-    <button class="gray" data-value="%">%</button>
-    <button class="op" data-value="/">÷</button>
-    <button data-value="7">7</button>
-    <button data-value="8">8</button>
-    <button data-value="9">9</button>
-    <button class="op" data-value="*">×</button>
-    <button data-value="4">4</button>
-    <button data-value="5">5</button>
-    <button data-value="6">6</button>
-    <button class="op" data-value="-">−</button>
-    <button data-value="1">1</button>
-    <button data-value="2">2</button>
-    <button data-value="3">3</button>
-    <button class="op" data-value="+">＋</button>
-    <button class="zero" data-value="0">0</button>
-    <button data-value=".">.</button>
-    <button class="equal" data-value="=">=</button>
+    <button class="gray" data-val="DEL">⌫</button>
+    <button class="gray" data-val="AC">AC</button>
+    <button class="gray" data-val="%">%</button>
+    <button class="op" data-val="/">÷</button>
+    <button data-val="7">7</button><button data-val="8">8</button><button data-val="9">9</button>
+    <button class="op" data-val="*">×</button>
+    <button data-val="4">4</button><button data-val="5">5</button><button data-val="6">6</button>
+    <button class="op" data-val="-">−</button>
+    <button data-val="1">1</button><button data-val="2">2</button><button data-val="3">3</button>
+    <button class="op" data-val="+">＋</button>
+    <button class="zero" data-val="0">0</button>
+    <button data-val=".">.</button>
+    <button class="equal" data-val="=">=</button>
   </div>
 </div>
 
 <script>
-const historyPanel = document.getElementById("history");
-const totalBox = document.getElementById("totalBox");
-const keypad = document.getElementById("keypad");
+/**
+ * Calculator State & Logic
+ */
+const state = {
+  current: "",
+  previous: "",
+  operator: null,
+  isCalculated: false,
 
-let current = "";
-let previous = "";
-let operator = null;
-let justCalculated = false;
+  reset() {
+    this.current = ""; this.previous = ""; this.operator = null; this.isCalculated = false;
+  },
 
-// 計算（極限までシンプルに）
-function runCalc(a, b, op) {
-  const n1 = parseFloat(a) || 0;
-  const n2 = parseFloat(b) || 0;
-  switch(op){
-    case '+': return n1 + n2;
-    case '-': return n1 - n2;
-    case '*': return n1 * n2;
-    case '/': return n2 !== 0 ? n1 / n2 : 0;
-    default: return n2;
+  calculate() {
+    const a = parseFloat(this.previous) || 0;
+    const b = parseFloat(this.current) || 0;
+    switch(this.operator) {
+      case '+': return a + b;
+      case '-': return a - b;
+      case '*': return a * b;
+      case '/': return b !== 0 ? a / b : 0;
+      default: return b;
+    }
   }
-}
+};
 
-function format(num) {
-  if (num === "" || isNaN(num)) return num;
-  const parts = String(num).split(".");
-  parts[0] = Number(parts[0]).toLocaleString("ja-JP");
-  return parts.join(".");
-}
+/**
+ * UI Rendering & DOM Manipulation
+ */
+const ui = {
+  history: document.getElementById("history"),
+  total: document.getElementById("totalBox"),
 
-const toFull = s => s.replace(/\*/g,"×").replace(/\//g,"÷");
+  format(num) {
+    if (num === "" || isNaN(num) || num === null) return num;
+    const [int, dec] = String(num).split(".");
+    return Number(int).toLocaleString("ja-JP") + (dec !== undefined ? "." + dec : "");
+  },
 
-function updateTotal() {
-  let sum = 0;
-  historyPanel.querySelectorAll('.history-line[data-type="history"]').forEach(line => {
-    const res = line.querySelector(".text").textContent.split("=").pop().replace(/,/g,"");
-    sum += (parseFloat(res) || 0);
-  });
-  totalBox.textContent = "合計: " + format(sum);
-}
+  toSymbol: s => s.replace(/\*/g,"×").replace(/\//g,"÷"),
 
-function updateInputLine() {
-  let last = historyPanel.lastElementChild;
-  if (!last || last.dataset.type !== "input") {
-    last = document.createElement("div");
-    last.className = "history-line";
-    last.dataset.type = "input";
-    last.innerHTML = '<span class="text"></span>';
-    historyPanel.appendChild(last);
-  }
-  const display = (previous && operator) 
-    ? `${format(previous)} ${toFull(operator)} ${format(current)}`
-    : format(current || "0");
-  last.querySelector(".text").textContent = display;
-  historyPanel.scrollTop = historyPanel.scrollHeight;
-}
+  updateTotal() {
+    let sum = 0;
+    this.history.querySelectorAll('[data-type="history"]').forEach(line => {
+      const res = line.querySelector(".text").textContent.split("=").pop().replace(/,/g,"").trim();
+      sum += parseFloat(res) || 0;
+    });
+    this.total.textContent = `合計: ${this.format(sum)}`;
+  },
 
-function calculate() {
-  if (operator && previous !== "" && current !== "") {
-    const result = runCalc(previous, current, operator);
-    const expr = `${previous}${operator}${current}`;
-    const line = historyPanel.lastElementChild;
+  // 現在の入力行を描画、または新規作成
+  renderInput() {
+    let line = this.history.lastElementChild;
+    if (!line || line.dataset.type !== "input") {
+      line = document.createElement("div");
+      line.className = "history-line";
+      line.dataset.type = "input";
+      line.innerHTML = '<span class="text"></span>';
+      this.history.appendChild(line);
+    }
+    
+    const display = state.operator 
+      ? `${this.format(state.previous)} ${this.toSymbol(state.operator)} ${this.format(state.current)}`
+      : this.format(state.current || "0");
+    
+    line.querySelector(".text").textContent = display;
+    this.history.scrollTop = this.history.scrollHeight;
+  },
+
+  // 入力行を履歴として確定
+  finalize(result) {
+    const line = this.history.lastElementChild;
+    if (!line) return;
+    
     line.dataset.type = "history";
-    line.innerHTML = `<span class="text">${format(previous)} ${toFull(operator)} ${format(current)} = ${format(result)}</span><span class="delete-btn">×</span>`;
-    current = ""; previous = ""; operator = null; justCalculated = true;
-    updateTotal();
-    updateInputLine();
+    const expr = state.operator 
+      ? `${this.format(state.previous)} ${this.toSymbol(state.operator)} ${this.format(state.current)} = ${this.format(result)}`
+      : this.format(state.current);
+    
+    line.innerHTML = `<span class="text">${expr}</span><span class="delete-btn">×</span>`;
+    this.updateTotal();
   }
-}
+};
 
-// 触れた瞬間に実行される関数
+/**
+ * Core Controller
+ */
 function handleInput(val) {
-  if (justCalculated && !isNaN(val)) current = "";
-  justCalculated = false;
+  // 計算直後の数字入力はリセット
+  if (state.isCalculated && !isNaN(val)) state.current = "";
+  state.isCalculated = false;
 
   if (val === "AC") {
-    current = ""; previous = ""; operator = null;
-    historyPanel.innerHTML = "";
-    updateInputLine(); updateTotal();
-  } else if (val === "DEL") {
-    current = current.slice(0, -1);
-    updateInputLine();
-  } else if (val === "=") {
-    calculate();
-  } else if (["+", "-", "*", "/"].includes(val)) {
-    if (current !== "") {
-      if (previous !== "") calculate();
-      operator = val; previous = current; current = "";
-    } else if (previous !== "") {
-      operator = val;
+    state.reset();
+    ui.history.innerHTML = "";
+    ui.updateTotal();
+  } 
+  else if (val === "DEL") {
+    state.current = state.current.slice(0, -1);
+  } 
+  else if (val === "=") {
+    if (state.current === "") return;
+    const res = state.calculate();
+    ui.finalize(res);
+    state.reset();
+    state.isCalculated = true;
+  } 
+  else if (["+", "-", "*", "/"].includes(val)) {
+    if (state.current !== "") {
+      if (state.previous !== "") {
+        const res = state.calculate();
+        ui.finalize(res);
+        state.previous = String(res);
+      } else {
+        state.previous = state.current;
+      }
+      state.operator = val;
+      state.current = "";
+    } else if (state.previous !== "") {
+      state.operator = val; // 演算子の打ち直し
     }
-    updateInputLine();
-  } else {
-    current += val;
-    updateInputLine();
+  } 
+  else {
+    if (val === "." && state.current.includes(".")) return;
+    state.current += val;
   }
+  
+  ui.renderInput();
 }
 
-// clickではなくpointerdownを使うことで反応速度を最大化
-keypad.addEventListener("pointerdown", e => {
+// 高速反応のための pointerdown イベント
+document.getElementById("keypad").addEventListener("pointerdown", e => {
   const btn = e.target.closest("button");
   if (!btn) return;
-  e.preventDefault(); // ズーム防止
-  handleInput(btn.dataset.value);
+  e.preventDefault(); 
+  handleInput(btn.dataset.val);
 });
 
-historyPanel.addEventListener("pointerdown", e => {
+// 履歴削除
+ui.history.addEventListener("pointerdown", e => {
   if (e.target.classList.contains("delete-btn")) {
     e.target.parentElement.remove();
-    updateTotal();
+    ui.updateTotal();
   }
 });
 
-updateInputLine();
+// 初期実行
+ui.renderInput();
 </script>
 </body>
 </html>
