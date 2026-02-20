@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8" />
-<title>Pro Calculator (Percent Fixed)</title>
+<title>Calculator Pro (Total Fixed)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <style>
   :root {
@@ -11,7 +11,6 @@
     --btn-dark: #333;
     --btn-gray: #a5a5a5;
     --btn-accent: #ff9f0a;
-    --btn-accent2: #ffb347;
     --border: rgba(255, 255, 255, 0.25);
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -26,7 +25,7 @@
   .total-box { background: rgba(255, 255, 255, 0.1); color: #fff; padding: 14px 18px; border-radius: 14px; font-size: 28px; text-align: right; margin-bottom: 12px; font-weight: 500; }
   .keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); }
   button { height: 70px; border: none; font-size: 26px; color: #fff; background: var(--btn-dark); cursor: pointer; outline: none; }
-  button:active { filter: brightness(1.6); background-color: #555; }
+  button:active { filter: brightness(1.6); }
   .op, .equal { background: var(--btn-accent); color: #000; font-weight: 600; font-size: 30px; }
   .gray { background: var(--btn-gray); color: #000; }
   .zero { grid-column: span 2; text-align: left; padding-left: 35px; }
@@ -58,18 +57,17 @@
 
 <script>
 /**
- * State & Logic
+ * State
  */
 const state = {
-  current: "",
-  previous: "",
+  current: "",   // 現在入力中の数字
+  previous: "",  // 演算前の数字（または中間結果）
   operator: null,
   isCalculated: false,
 
   reset() { this.current = ""; this.previous = ""; this.operator = null; this.isCalculated = false; },
 
   calculate() {
-    // 浮動小数点数の計算精度を考慮
     const a = parseFloat(this.previous) || 0;
     const b = parseFloat(this.current) || 0;
     let res = 0;
@@ -80,13 +78,12 @@ const state = {
       case '/': res = b !== 0 ? a / b : 0; break;
       default: res = b;
     }
-    // 小数点以下の計算誤差対策（例: 0.1 + 0.2）
     return parseFloat(res.toPrecision(12));
   }
 };
 
 /**
- * UI Rendering
+ * UI
  */
 const ui = {
   history: document.getElementById("history"),
@@ -97,8 +94,7 @@ const ui = {
     if (num === "" || isNaN(num) || num === null) return num;
     const str = String(num);
     const [int, dec] = str.split(".");
-    const formattedInt = Number(int).toLocaleString("ja-JP");
-    return dec !== undefined ? formattedInt + "." + dec : formattedInt;
+    return Number(int).toLocaleString("ja-JP") + (dec !== undefined ? "." + dec : "");
   },
 
   toSymbol: s => s.replace(/\*/g,"×").replace(/\//g,"÷"),
@@ -106,14 +102,15 @@ const ui = {
   updateTotal() {
     let sum = 0;
     this.history.querySelectorAll('[data-type="history"]').forEach(line => {
-      const res = line.querySelector(".text").textContent.split("=").pop().replace(/,/g,"").trim();
-      sum += parseFloat(res) || 0;
+      const resText = line.querySelector(".text").textContent.split("=").pop().replace(/,/g,"").trim();
+      sum += parseFloat(resText) || 0;
     });
     this.total.textContent = `合計: ${this.format(parseFloat(sum.toPrecision(12)))}`;
   },
 
   renderInput() {
     let line = this.history.lastElementChild;
+    // 履歴確定済みか、まだ一行もない場合は「入力用」の行を作る
     if (!line || line.dataset.type !== "input") {
       line = document.createElement("div");
       line.className = "history-line";
@@ -121,21 +118,28 @@ const ui = {
       line.innerHTML = '<span class="text"></span>';
       this.history.appendChild(line);
     }
+    
+    // 表示ロジック: 演算子がある場合は「前回の結果 演算子 今回の入力」を表示
     const display = state.operator 
       ? `${this.format(state.previous)} ${this.toSymbol(state.operator)} ${this.format(state.current)}`
       : this.format(state.current || "0");
+    
     line.querySelector(".text").textContent = display;
     this.history.scrollTop = this.history.scrollHeight;
   },
 
   finalize(result) {
     const line = this.history.lastElementChild;
-    if (!line) return;
+    if (!line || line.dataset.type !== "input") return;
+    
+    // この行を履歴として確定させる（ここで初めて合計に反映される）
     line.dataset.type = "history";
-    const expr = state.operator 
+    // 履歴には最終的な計算式「36」または「A op B = 36」を表示
+    const finalDisplay = state.operator 
       ? `${this.format(state.previous)} ${this.toSymbol(state.operator)} ${this.format(state.current)} = ${this.format(result)}`
-      : this.format(state.current);
-    line.innerHTML = `<span class="text">${expr}</span><span class="delete-btn">×</span>`;
+      : this.format(result);
+    
+    line.innerHTML = `<span class="text">${finalDisplay}</span><span class="delete-btn">×</span>`;
     this.updateTotal();
   }
 };
@@ -155,34 +159,44 @@ function handleInput(val) {
   else if (val === "DEL") {
     state.current = state.current.slice(0, -1);
   } 
-  // ★ ここが修正ポイント：パーセント処理を追加
   else if (val === "%") {
     if (state.current !== "" && state.current !== "-") {
       state.current = String(parseFloat(state.current) / 100);
     }
   }
   else if (val === "=") {
-    if (state.current === "" || state.current === "-") return;
+    if (state.current === "" || state.current === "-") {
+      if (state.previous !== "") { // 3 + = のようなケース
+        const res = parseFloat(state.previous);
+        ui.finalize(res);
+        state.reset();
+        state.isCalculated = true;
+      }
+      return;
+    }
     const res = state.calculate();
     ui.finalize(res);
     state.reset();
     state.isCalculated = true;
   } 
   else if (["+", "-", "*", "/"].includes(val)) {
+    // 負の数からの開始
     if (val === "-" && state.current === "" && state.previous === "") {
       state.current = "-";
-    } else if (state.current !== "" && state.current !== "-") {
-      if (state.previous !== "") {
-        const res = state.calculate();
-        ui.finalize(res);
-        state.previous = String(res);
+    } 
+    else if (state.current !== "" && state.current !== "-") {
+      if (state.operator) {
+        // すでに演算子がある場合、中間結果を出して継続（履歴にはまだ書き出さない）
+        state.previous = String(state.calculate());
       } else {
         state.previous = state.current;
       }
       state.operator = val;
       state.current = "";
-    } else if (state.previous !== "") {
-      state.operator = val; 
+    } 
+    else if (state.previous !== "") {
+      // 演算子の打ち直し
+      state.operator = val;
     }
   } 
   else {
