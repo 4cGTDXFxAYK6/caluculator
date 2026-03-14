@@ -2,12 +2,22 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8" />
-<title> Calculator </title>
+<title>履歴付き電卓</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 
-<!-- ★ iOS アイコン対応（icon-192.png をそのまま使う） -->
+<!-- ============================
+     iOS（Safari）対応
+     ============================ -->
+<!-- iOS は manifest.json を無視するため、apple-touch-icon が必須 -->
 <link rel="apple-touch-icon" sizes="192x192" href="./icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+<!-- ============================
+     Android（Chrome）対応
+     ============================ -->
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#000000">
 
 <style>
   :root {
@@ -42,4 +52,236 @@
 </head>
 <body>
 
-<!-- ここから下はあなたの元のコードそのまま（省略） -->
+<div class="calculator">
+  <div id="history" class="history"></div>
+  <div id="totalBox" class="total-box">合計: 0</div>
+  <div class="keys" id="keypad">
+    <button class="gray" data-val="DEL">⌫</button>
+    <button class="gray" data-val="AC">AC</button>
+    <button class="gray" data-val="%">%</button>
+    <button class="op" data-val="/">÷</button>
+    <button data-val="7">7</button><button data-val="8">8</button><button data-val="9">9</button>
+    <button class="op" data-val="*">×</button>
+    <button data-val="4">4</button><button data-val="5">5</button><button data-val="6">6</button>
+    <button class="op" data-val="-">−</button>
+    <button data-val="1">1</button><button data-val="2">2</button><button data-val="3">3</button>
+    <button class="op" data-val="+">＋</button>
+    <button class="zero" data-val="0">0</button>
+    <button data-val=".">.</button>
+    <button class="equal" data-val="=">=</button>
+  </div>
+</div>
+
+<script>
+/* -------------------------
+   localStorage 永続化処理
+--------------------------*/
+function saveHistoryToLocal() {
+  const lines = [];
+  document.querySelectorAll('[data-type="history"]').forEach(line => {
+    lines.push(line.querySelector(".text").textContent);
+  });
+  localStorage.setItem("calcHistory", JSON.stringify(lines));
+}
+
+function loadHistoryFromLocal() {
+  const data = JSON.parse(localStorage.getItem("calcHistory") || "[]");
+  data.forEach(text => {
+    const line = document.createElement("div");
+    line.className = "history-line";
+    line.dataset.type = "history";
+    line.innerHTML = `<span class="text">${text}</span><span class="delete-btn">×</span>`;
+    ui.history.appendChild(line);
+  });
+  ui.updateTotal();
+}
+
+/* -------------------------
+   State
+--------------------------*/
+const state = {
+  formula: [],
+  current: "",
+  isCalculated: false,
+
+  reset() { this.formula = []; this.current = ""; this.isCalculated = false; },
+
+  execute() {
+    let tokens = [...this.formula];
+    if (this.current !== "" && this.current !== "-") tokens.push(this.current);
+    if (tokens.length === 0) return 0;
+
+    let res = parseFloat(tokens[0]);
+    for (let i = 1; i < tokens.length; i += 2) {
+      let op = tokens[i];
+      let nextVal = parseFloat(tokens[i+1]);
+      if (isNaN(nextVal)) continue;
+
+      if (op === '+') res += nextVal;
+      if (op === '-') res -= nextVal;
+      if (op === '*') res *= nextVal;
+      if (op === '/') res = nextVal !== 0 ? res / nextVal : 0;
+    }
+    return parseFloat(res.toPrecision(12));
+  }
+};
+
+/* -------------------------
+   UI
+--------------------------*/
+const ui = {
+  history: document.getElementById("history"),
+  total: document.getElementById("totalBox"),
+
+  format(num) {
+    if (num === "-") return "-";
+    if (num === "" || num === null) return num;
+    if (isNaN(num)) return String(num);
+    const parts = String(num).split(".");
+    parts[0] = Number(parts[0]).toLocaleString("ja-JP");
+    return parts.join(".");
+  },
+
+  toSymbol: s => s.replace(/\*/g,"×").replace(/\//g,"÷"),
+
+  buildExprFromState() {
+    const parts = state.formula.map(item =>
+      ["+","-","*","/"].includes(item) ? ` ${this.toSymbol(item)} ` : this.format(item)
+    );
+    const displayCurrent = this.format(state.current);
+    return parts.join("") + (displayCurrent || "");
+  },
+
+  updateTotal() {
+    let sum = 0;
+    this.history.querySelectorAll('[data-type="history"]').forEach(line => {
+      const resText = line.querySelector(".text").textContent.split("=").pop().replace(/,/g,"").trim();
+      sum += parseFloat(resText) || 0;
+    });
+    this.total.textContent = `合計: ${this.format(parseFloat(sum.toPrecision(12)))}`;
+  },
+
+  renderInput() {
+    let line = this.history.lastElementChild;
+    if (!line || line.dataset.type !== "input") {
+      line = document.createElement("div");
+      line.className = "history-line";
+      line.dataset.type = "input";
+      line.innerHTML = '<span class="text"></span>';
+      this.history.appendChild(line);
+    }
+    
+    let displayStr = state.formula.map(item =>
+      ["+","-","*","/"].includes(item) ? ` ${this.toSymbol(item)} ` : this.format(item)
+    ).join("");
+
+    displayStr += this.format(state.current);
+
+    line.querySelector(".text").textContent = displayStr || "0";
+    this.history.scrollTop = this.history.scrollHeight;
+  },
+
+  finalize(fullExpr, result, omitEquals = false) {
+    const line = this.history.lastElementChild;
+    if (!line) return;
+    line.dataset.type = "history";
+    if (omitEquals) {
+      line.innerHTML = `<span class="text">${this.format(result)}</span><span class="delete-btn">×</span>`;
+    } else {
+      line.innerHTML = `<span class="text">${fullExpr} = ${this.format(result)}</span><span class="delete-btn">×</span>`;
+    }
+    this.updateTotal();
+  }
+};
+
+/* -------------------------
+   Controller
+--------------------------*/
+function handleInput(val) {
+  if (state.isCalculated && !isNaN(val)) {
+    state.reset();
+  }
+  state.isCalculated = false;
+
+  if (val === "AC") {
+    state.reset();
+    ui.history.innerHTML = "";
+    ui.updateTotal();
+    saveHistoryToLocal();
+  }
+  else if (val === "DEL") {
+    if (state.current !== "") {
+      state.current = state.current.slice(0, -1);
+    } else if (state.formula.length > 0) {
+      state.formula.pop();
+      state.current = state.formula.pop() || "";
+    }
+  }
+  else if (val === "%") {
+    if (state.current !== "" && state.current !== "-") {
+      state.current = String(parseFloat(state.current) / 100);
+    }
+  }
+  else if (val === "=") {
+    if (state.current === "" && state.formula.length === 0) return;
+
+    const exprStr = ui.buildExprFromState();
+    const res = state.execute();
+
+    const omitEquals = (state.formula.length === 0);
+
+    ui.finalize(exprStr, res, omitEquals);
+
+    saveHistoryToLocal();
+
+    state.reset();
+    state.isCalculated = true;
+  }
+  else if (["+", "-", "*", "/"].includes(val)) {
+    if (val === "-" && state.current === "" && state.formula.length === 0) {
+      state.current = "-";
+    }
+    else if (state.current !== "" && state.current !== "-") {
+      state.formula.push(state.current);
+      state.formula.push(val);
+      state.current = "";
+    }
+    else if (state.formula.length > 0) {
+      state.formula[state.formula.length - 1] = val;
+    }
+  }
+  else {
+    if (val === "." && state.current.includes(".")) return;
+    state.current += val;
+  }
+  
+  ui.renderInput();
+}
+
+/* -------------------------
+   Event
+--------------------------*/
+document.getElementById("keypad").addEventListener("pointerdown", e => {
+  const btn = e.target.closest("button");
+  if (!btn) return;
+  e.preventDefault();
+  handleInput(btn.dataset.val);
+});
+
+ui.history.addEventListener("pointerdown", e => {
+  if (e.target.classList.contains("delete-btn")) {
+    e.target.parentElement.remove();
+    ui.updateTotal();
+    saveHistoryToLocal();
+  }
+});
+
+/* -------------------------
+   初期化（履歴復元）
+--------------------------*/
+loadHistoryFromLocal();
+ui.renderInput();
+</script>
+
+</body>
+</html>
