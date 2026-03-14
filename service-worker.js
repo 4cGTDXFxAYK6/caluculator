@@ -1,14 +1,14 @@
 // ===============================
 //  PWA キャッシュ設定
 // ===============================
-const CACHE_VERSION = 'v59';   // ← 更新時は数字を上げる
+const CACHE_VERSION = 'v60';   // ← バージョンアップ
 const CACHE_NAME = `calculator-cache-${CACHE_VERSION}`;
 
 const URLS_TO_CACHE = [
   './',
   './index.html',
   './manifest.json',
-  './icon-192.png',
+  './icon-192.png',          // ← iOS が参照するアイコン
   './icon-512.png'
 ];
 
@@ -19,7 +19,7 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(URLS_TO_CACHE))
   );
-  self.skipWaiting(); // ← 新しい SW を即座に有効化
+  self.skipWaiting();
 });
 
 // ===============================
@@ -35,7 +35,7 @@ self.addEventListener('activate', event => {
       )
     )
   );
-  self.clients.claim(); // ← ページを即座に新 SW の管理下に
+  self.clients.claim();
 });
 
 // ===============================
@@ -55,10 +55,8 @@ self.addEventListener('fetch', event => {
 
   event.respondWith(
     caches.match(request).then(cachedResponse => {
-      // キャッシュがあれば即返す
       if (cachedResponse) return cachedResponse;
 
-      // ネットから取得してキャッシュに保存
       return fetch(request)
         .then(networkResponse => {
           if (
@@ -71,65 +69,7 @@ self.addEventListener('fetch', event => {
           }
           return networkResponse;
         })
-        .catch(() => {
-          // オフライン時のフォールバック（必要なら追加）
-        });
+        .catch(() => {});
     })
   );
-
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
