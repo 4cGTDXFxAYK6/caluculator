@@ -120,13 +120,23 @@ const ui = {
 
   format(num) {
     if (num === "-") return "-";
-    if (num === "" || isNaN(num) || num === null) return num;
+    if (num === "" || num === null) return num;
+    if (isNaN(num)) return String(num);
     const parts = String(num).split(".");
     parts[0] = Number(parts[0]).toLocaleString("ja-JP");
     return parts.join(".");
   },
 
   toSymbol: s => s.replace(/\*/g,"×").replace(/\//g,"÷"),
+
+  buildExprFromState() {
+    // state.formula と state.current から表示用の文字列を作る（renderInput と同じロジック）
+    const parts = state.formula.map(item =>
+      ["+","-","*","/"].includes(item) ? ` ${this.toSymbol(item)} ` : this.format(item)
+    );
+    const displayCurrent = this.format(state.current);
+    return parts.join("") + (displayCurrent || "");
+  },
 
   updateTotal() {
     let sum = 0;
@@ -157,11 +167,15 @@ const ui = {
     this.history.scrollTop = this.history.scrollHeight;
   },
 
-  finalize(fullExpr, result) {
+  finalize(fullExpr, result, omitEquals = false) {
     const line = this.history.lastElementChild;
     if (!line) return;
     line.dataset.type = "history";
-    line.innerHTML = `<span class="text">${fullExpr} = ${this.format(result)}</span><span class="delete-btn">×</span>`;
+    if (omitEquals) {
+      line.innerHTML = `<span class="text">${this.format(result)}</span><span class="delete-btn">×</span>`;
+    } else {
+      line.innerHTML = `<span class="text">${fullExpr} = ${this.format(result)}</span><span class="delete-btn">×</span>`;
+    }
     this.updateTotal();
   }
 };
@@ -196,9 +210,15 @@ function handleInput(val) {
   }
   else if (val === "=") {
     if (state.current === "" && state.formula.length === 0) return;
-    const finalExpr = ui.history.lastElementChild.querySelector(".text").textContent;
+
+    // 内部状態から式文字列を組み立てる（DOM のテキストを直接使わない）
+    const exprStr = ui.buildExprFromState();
     const res = state.execute();
-    ui.finalize(finalExpr, res);
+
+    // 「数字のみ入力」の場合は = を付けずに単に数値だけ表示する（以前の挙動を復元）
+    const omitEquals = (state.formula.length === 0);
+
+    ui.finalize(exprStr, res, omitEquals);
 
     saveHistoryToLocal();  // ← 永続化
 
