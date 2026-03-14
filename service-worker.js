@@ -1,7 +1,7 @@
 // ===============================
 //  PWA キャッシュ設定
 // ===============================
-const CACHE_VERSION = 'v60';   // ← バージョンアップ
+const CACHE_VERSION = 'v61';   // ← バージョンアップ
 const CACHE_NAME = `calculator-cache-${CACHE_VERSION}`;
 
 const URLS_TO_CACHE = [
