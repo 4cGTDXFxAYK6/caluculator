@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8" />
-<title>履歴付き電卓 (キーボード対応版)</title>
+<title>履歴付き電卓 (キーボード修正版)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 
 <link rel="apple-touch-icon" sizes="192x192" href="./icon-192.png">
@@ -83,6 +83,9 @@
   .keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; flex-shrink: 0; }
   button { height: 70px; border: none; font-size: 26px; color: #fff; background: var(--btn-dark); cursor: pointer; outline: none; }
   button:active { filter: brightness(1.6); }
+  /* フォーカス時の枠線を消す */
+  button:focus { outline: none; }
+
   .op, .equal { background: var(--btn-accent); color: #000; font-weight: 600; font-size: 30px; }
   .gray { background: var(--btn-gray); color: #000; }
   .zero { grid-column: span 2; text-align: left; padding-left: 35px; }
@@ -293,34 +296,17 @@ function handleInput(val) {
 /* -------------------------
    Event Listeners
 --------------------------*/
-// マウス/タッチ操作
 document.getElementById("keypad").addEventListener("pointerdown", e => {
   const b = e.target.closest("button");
-  if (!b) return; e.preventDefault(); handleInput(b.dataset.val);
+  if (!b) return; 
+  e.preventDefault(); 
+  handleInput(b.dataset.val);
+  // 重要：クリック後にフォーカスを外して、キーボードのEnter等との重複を防ぐ
+  b.blur();
 });
 
-// コピー操作
 ui.totalBox.addEventListener("click", () => ui.copyToClipboard());
 
-// 【新設】キーボード入力対応
 window.addEventListener("keydown", e => {
   const keyMap = {
-    '0': '0', '1': '1', '2': '2', '3': '3', '4': '4', '5': '5', '6': '6', '7': '7', '8': '8', '9': '9',
-    '.': '.', '+': '+', '-': '-', '*': '*', '/': '/',
-    'Enter': '=', '=': '=',
-    'Backspace': 'DEL', 'Delete': 'DEL',
-    'Escape': 'AC', 'c': 'AC'
-  };
-  const val = keyMap[e.key];
-  if (val) {
-    e.preventDefault(); // ブラウザの検索窓などが開くのを防止
-    handleInput(val);
-  }
-});
-
-// 初期化
-loadHistoryFromLocal();
-ui.renderInput();
-</script>
-</body>
-</html>
+    '0': '0', '1': '1', '2': '2',
