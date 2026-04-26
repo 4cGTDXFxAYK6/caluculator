@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8" />
-<title>履歴付き電卓 (ソリッドスワイプ版)</title>
+<title>履歴付き電卓 (グレーテーマ版)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 
 <link rel="apple-touch-icon" sizes="192x192" href="./icon-192.png">
@@ -14,11 +14,10 @@
 <style>
   :root {
     --bg: #000;
-    --panel-bg: #1c1c1e; /* 不透明な背景色 */
+    --panel-bg: #1c1c1e;
     --btn-dark: #2c2c2e;
-    --btn-gray: #a5a5a5;
+    --btn-gray: #a5a5a5; /* ACボタンの色 */
     --btn-accent: #ff9f0a;
-    --btn-danger: #ff3b30;
     --border: rgba(255, 255, 255, 0.1);
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -41,17 +40,17 @@
     scrollbar-width: none; 
   }
 
-  /* 履歴の各行のコンテナ */
+  /* 履歴の各行：土台の色をACボタンと同じグレーに変更 */
   .history-item {
     position: relative;
-    background-color: var(--btn-danger); /* 削除ボタンの赤を土台に置く */
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    background-color: var(--btn-gray); 
+    border-bottom: 1px solid rgba(0, 0, 0, 0.3); /* 行間の区切りを明確に */
     overflow: hidden;
   }
   
-  /* 実際に文字が乗る前面パネル（ソリッド背景） */
+  /* 前面パネル */
   .history-content {
-    background-color: #121212; /* 完全に不透明な背景で下の赤を隠す */
+    background-color: #121212; 
     padding: 12px 16px;
     position: relative;
     z-index: 2;
@@ -65,10 +64,10 @@
     white-space: nowrap; 
     overflow-x: auto; 
     scrollbar-width: none;
-    letter-spacing: -0.04em; /* 文字詰め */
+    letter-spacing: -0.04em;
   }
 
-  /* 行の背面に固定された削除テキスト */
+  /* 削除ラベル：文字色をACボタンと同じ黒に変更 */
   .delete-label {
     position: absolute;
     right: 0;
@@ -78,7 +77,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
+    color: #000; /* ACボタンの文字色と同じ */
     font-size: 16px;
     font-weight: bold;
     z-index: 1;
@@ -180,13 +179,10 @@ const ui = {
     const item = document.createElement("div");
     item.className = "history-item";
     item.dataset.type = isFinal ? "history" : "input";
-    
-    // 背景（赤）の上にパネル（黒）が乗る構造
     item.innerHTML = `
       <div class="delete-label">削除</div>
       <div class="history-content"><span class="text">${text}</span></div>
     `;
-    
     this.history.appendChild(item);
     if (isFinal) this.attachSwipe(item);
     return item;
@@ -197,7 +193,6 @@ const ui = {
     if (!item || item.dataset.type !== "input") {
       item = this.createHistoryElement("", false);
     }
-    
     let expr = state.formula.map(i => ["+","-","*","/"].includes(i) ? this.toSymbol(i) : this.format(i)).join("");
     expr += this.format(state.current);
     item.querySelector(".text").textContent = expr || "0";
@@ -243,7 +238,6 @@ const ui = {
       }
     });
 
-    // 削除ラベル（土台）クリックで削除
     el.querySelector(".delete-label").addEventListener("click", () => {
       el.remove();
       ui.updateTotal();
