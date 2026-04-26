@@ -2,20 +2,13 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8" />
-<title>履歴付き電卓</title>
+<title>履歴付き電卓 (最適化版)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 
-<!-- ============================
-     iOS（Safari）対応
-     ============================ -->
-<!-- iOS は manifest.json を無視するため、apple-touch-icon が必須 -->
 <link rel="apple-touch-icon" sizes="192x192" href="./icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 
-<!-- ============================
-     Android（Chrome）対応
-     ============================ -->
 <link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#000000">
 
@@ -23,37 +16,67 @@
   :root {
     --bg: #000;
     --panel: rgba(255, 255, 255, 0.08);
-    --btn-dark: #333;
+    --btn-dark: #1c1c1e;
     --btn-gray: #a5a5a5;
     --btn-accent: #ff9f0a;
-    --border: rgba(255, 255, 255, 0.25);
+    --border: rgba(255, 255, 255, 0.15);
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body { height: 100%; margin: 0; background: var(--bg); font-family: -apple-system, sans-serif; overflow: hidden; touch-action: none; }
+  html, body { height: 100%; margin: 0; background: var(--bg); font-family: -apple-system, BlinkMacSystemFont, sans-serif; overflow: hidden; touch-action: none; }
   body { display: flex; align-items: center; justify-content: center; }
-  .calculator { width: 100%; max-width: 600px; padding: 16px; display: flex; flex-direction: column; height: 100%; }
   
-  .history { background: var(--panel); backdrop-filter: blur(10px); color: #fff; flex: 1; padding: 12px; border-radius: 16px; overflow-y: auto; font-size: 22px; margin-bottom: 12px; scrollbar-width: none; }
-.history-line {
-  padding: 6px 6px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-  .text { flex: 1; white-space: nowrap; overflow-x: auto; scrollbar-width: none; }
-  .delete-btn { color: var(--btn-accent); font-size: 26px; font-weight: bold; padding: 0 12px; cursor: pointer; }
+  .calculator { width: 100%; max-width: 600px; padding: 12px; display: flex; flex-direction: column; height: 100%; }
   
-  .total-box { background: rgba(255, 255, 255, 0.1); color: #fff; padding: 14px 18px; border-radius: 14px; font-size: 28px; text-align: right; margin-bottom: 12px; font-weight: 500; }
+  /* 履歴エリアの最適化 */
+  .history { 
+    background: var(--panel); 
+    backdrop-filter: blur(20px); 
+    color: #fff; 
+    flex: 1; 
+    padding: 8px; 
+    border-radius: 16px; 
+    overflow-y: auto; 
+    font-size: 22px; 
+    margin-bottom: 12px; 
+    scrollbar-width: none; 
+  }
+  .history-line {
+    padding: 4px 2px; /* 上下左右の余白を縮小 */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
   
-  .keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); }
+  /* 文字間隔の調整 */
+  .text { 
+    flex: 1; 
+    white-space: nowrap; 
+    overflow-x: auto; 
+    scrollbar-width: none;
+    letter-spacing: -0.03em; /* 文字間をわずかに詰め、1行に入る文字数を増やす */
+  }
+  
+  /* 削除ボタンの幅を最小化 */
+  .delete-btn { 
+    color: var(--btn-accent); 
+    font-size: 22px; 
+    font-weight: bold; 
+    padding: 0 4px 0 10px; 
+    cursor: pointer; 
+    opacity: 0.8;
+  }
+  
+  .total-box { background: rgba(255, 255, 255, 0.1); color: #fff; padding: 12px 16px; border-radius: 14px; font-size: 26px; text-align: right; margin-bottom: 10px; font-weight: 600; }
+  
+  .keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
   button { height: 75px; border: none; font-size: 26px; color: #fff; background: var(--btn-dark); cursor: pointer; outline: none; }
   button:active { filter: brightness(1.6); }
   .op, .equal { background: var(--btn-accent); color: #000; font-weight: 600; font-size: 30px; }
   .gray { background: var(--btn-gray); color: #000; }
   .zero { grid-column: span 2; text-align: left; padding-left: 35px; }
 
-  @media (min-width: 768px) { button { height: 95px; font-size: 34px; } }
+  @media (min-width: 768px) { button { height: 90px; font-size: 34px; } }
 </style>
 </head>
 <body>
@@ -80,7 +103,7 @@
 
 <script>
 /* -------------------------
-   localStorage 永続化処理
+   localStorage 永続化
 --------------------------*/
 function saveHistoryToLocal() {
   const lines = [];
@@ -133,7 +156,7 @@ const state = {
 };
 
 /* -------------------------
-   UI
+   UI (余白・スペース最適化)
 --------------------------*/
 const ui = {
   history: document.getElementById("history"),
@@ -148,11 +171,12 @@ const ui = {
     return parts.join(".");
   },
 
+  // 演算子前後のスペースを削除
   toSymbol: s => s.replace(/\*/g,"×").replace(/\//g,"÷"),
 
   buildExprFromState() {
     const parts = state.formula.map(item =>
-      ["+","-","*","/"].includes(item) ? ` ${this.toSymbol(item)} ` : this.format(item)
+      ["+","-","*","/"].includes(item) ? `${this.toSymbol(item)}` : this.format(item)
     );
     const displayCurrent = this.format(state.current);
     return parts.join("") + (displayCurrent || "");
@@ -161,6 +185,7 @@ const ui = {
   updateTotal() {
     let sum = 0;
     this.history.querySelectorAll('[data-type="history"]').forEach(line => {
+      // 合計計算時は「=」以降を取得
       const resText = line.querySelector(".text").textContent.split("=").pop().replace(/,/g,"").trim();
       sum += parseFloat(resText) || 0;
     });
@@ -177,8 +202,9 @@ const ui = {
       this.history.appendChild(line);
     }
     
+    // スペースを入れずに式を結合
     let displayStr = state.formula.map(item =>
-      ["+","-","*","/"].includes(item) ? ` ${this.toSymbol(item)} ` : this.format(item)
+      ["+","-","*","/"].includes(item) ? `${this.toSymbol(item)}` : this.format(item)
     ).join("");
 
     displayStr += this.format(state.current);
@@ -194,7 +220,8 @@ const ui = {
     if (omitEquals) {
       line.innerHTML = `<span class="text">${this.format(result)}</span><span class="delete-btn">×</span>`;
     } else {
-      line.innerHTML = `<span class="text">${fullExpr} = ${this.format(result)}</span><span class="delete-btn">×</span>`;
+      // 「 = 」の前後のスペースも最小限に
+      line.innerHTML = `<span class="text">${fullExpr}=${this.format(result)}</span><span class="delete-btn">×</span>`;
     }
     this.updateTotal();
   }
@@ -282,9 +309,7 @@ ui.history.addEventListener("pointerdown", e => {
   }
 });
 
-/* -------------------------
-   初期化（履歴復元）
---------------------------*/
+/* 初期化 */
 loadHistoryFromLocal();
 ui.renderInput();
 </script>
