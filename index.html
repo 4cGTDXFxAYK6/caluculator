@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8" />
-<title>履歴付き電卓 (省スペース版)</title>
+<title>履歴付き電卓 (マルチデバイス版)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 
 <link rel="apple-touch-icon" sizes="192x192" href="./icon-192.png">
@@ -14,19 +14,17 @@
 <style>
   :root {
     --bg: #000;
-    --panel-bg: #1c1c1e;
     --btn-dark: #2c2c2e;
     --btn-gray: #a5a5a5;
     --btn-accent: #ff9f0a; 
     --border: rgba(255, 255, 255, 0.1);
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body { height: 100%; margin: 0; background: var(--bg); font-family: -apple-system, BlinkMacSystemFont, sans-serif; overflow: hidden; touch-action: none; }
+  html, body { height: 100%; margin: 0; background: var(--bg); font-family: -apple-system, BlinkMacSystemFont, sans-serif; overflow: hidden; }
   body { display: flex; align-items: center; justify-content: center; }
   
   .calculator { width: 100%; max-width: 600px; padding: 12px; display: flex; flex-direction: column; height: 100%; }
   
-  /* 履歴エリア */
   .history { 
     background: rgba(255, 255, 255, 0.05); 
     backdrop-filter: blur(20px); 
@@ -40,25 +38,26 @@
     scrollbar-width: none; 
   }
 
-  /* 履歴の各行：削除背景（オレンジ） */
   .history-item {
     position: relative;
     background-color: var(--btn-accent); 
     border-bottom: 1px solid rgba(0, 0, 0, 0.2);
     overflow: hidden;
+    user-select: none; /* PCでのドラッグ選択を防止 */
   }
   
-  /* 前面パネル：paddingを8pxに縮小（行間を狭く） */
   .history-content {
     background-color: #121212; 
-    padding: 8px 16px; /* 12pxから8pxへ変更 */
+    padding: 8px 16px; 
     position: relative;
     z-index: 2;
     transition: transform 0.25s ease-out;
     display: flex;
     align-items: center;
-    min-height: 44px; /* タップ精度のための最小高さ */
+    min-height: 44px;
+    cursor: grab; /* PCで掴めることを示す */
   }
+  .history-content:active { cursor: grabbing; }
 
   .text { 
     flex: 1; 
@@ -66,15 +65,16 @@
     overflow-x: auto; 
     scrollbar-width: none;
     letter-spacing: -0.04em;
+    pointer-events: none; /* テキスト選択がスワイプを邪魔しないようにする */
   }
 
   .delete-label {
     position: absolute; right: 0; top: 0; bottom: 0; width: 80px;
     display: flex; align-items: center; justify-content: center;
     color: #000; font-size: 16px; font-weight: bold; z-index: 1;
+    cursor: pointer;
   }
 
-  /* 合計ボックス（コピー機能付き） */
   .total-box { 
     background: rgba(255, 255, 255, 0.1); 
     color: #fff; 
@@ -87,9 +87,7 @@
     cursor: pointer;
     position: relative;
     overflow: hidden;
-    transition: background 0.2s;
   }
-  .total-box:active { background: rgba(255, 255, 255, 0.2); }
   
   .copy-flash {
     position: absolute; inset: 0;
@@ -137,7 +135,6 @@
 </div>
 
 <script>
-/* --- localStorage --- */
 function saveHistoryToLocal() {
   const lines = [];
   document.querySelectorAll('.history-item[data-type="history"]').forEach(item => {
@@ -152,7 +149,6 @@ function loadHistoryFromLocal() {
   ui.updateTotal();
 }
 
-/* --- Logic --- */
 const state = {
   formula: [], current: "", isCalculated: false,
   reset() { this.formula = []; this.current = ""; this.isCalculated = false; },
@@ -171,7 +167,6 @@ const state = {
   }
 };
 
-/* --- UI --- */
 const ui = {
   history: document.getElementById("history"),
   total: document.getElementById("totalText"),
@@ -230,26 +225,50 @@ const ui = {
     this.updateTotal();
   },
 
+  /* PC/スマホ両対応のスワイプ（ドラッグ）処理 */
   attachSwipe(el) {
     const content = el.querySelector(".history-content");
-    let startX = 0, currentX = 0, isOpen = false;
-    el.addEventListener("touchstart", e => {
-      startX = e.touches[0].pageX;
+    let startX = 0, currentX = 0, isOpen = false, isDragging = false;
+
+    const onStart = (x) => {
+      startX = x;
+      isDragging = true;
       content.style.transition = "none";
-    }, {passive: true});
-    el.addEventListener("touchmove", e => {
-      let diff = e.touches[0].pageX - startX;
+    };
+
+    const onMove = (x) => {
+      if (!isDragging) return;
+      let diff = x - startX;
       if (isOpen) diff -= 80;
       if (diff > 0) diff = 0;
-      if (diff < -100) diff = -100;
+      if (diff < -120) diff = -120;
       currentX = diff;
       content.style.transform = `translateX(${currentX}px)`;
-    }, {passive: true});
-    el.addEventListener("touchend", () => {
+    };
+
+    const onEnd = () => {
+      if (!isDragging) return;
+      isDragging = false;
       content.style.transition = "transform 0.25s ease-out";
-      if (currentX < -40) { content.style.transform = "translateX(-80px)"; isOpen = true; } 
-      else { content.style.transform = "translateX(0px)"; isOpen = false; }
-    });
+      if (currentX < -40) {
+        content.style.transform = "translateX(-80px)";
+        isOpen = true;
+      } else {
+        content.style.transform = "translateX(0px)";
+        isOpen = false;
+      }
+    };
+
+    // Touch Events
+    el.addEventListener("touchstart", e => onStart(e.touches[0].pageX), {passive: true});
+    window.addEventListener("touchmove", e => onMove(e.touches[0].pageX), {passive: false});
+    window.addEventListener("touchend", onEnd);
+
+    // Mouse Events
+    el.addEventListener("mousedown", e => onStart(e.pageX));
+    window.addEventListener("mousemove", e => onMove(e.pageX));
+    window.addEventListener("mouseup", onEnd);
+
     el.querySelector(".delete-label").addEventListener("click", () => {
       el.remove(); ui.updateTotal(); saveHistoryToLocal();
     });
@@ -270,11 +289,9 @@ const ui = {
   }
 };
 
-/* --- Controller --- */
 function handleInput(val) {
   if (state.isCalculated && !isNaN(val)) state.reset();
   state.isCalculated = false;
-
   if (val === "AC") {
     state.reset(); ui.history.innerHTML = ""; ui.updateTotal(); saveHistoryToLocal();
   } else if (val === "DEL") {
