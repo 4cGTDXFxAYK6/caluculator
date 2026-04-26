@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8" />
-<title>履歴付き電卓 (マルチデバイス版)</title>
+<title>履歴付き電卓 (マルチデバイス・プロ仕様)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 
 <link rel="apple-touch-icon" sizes="192x192" href="./icon-192.png">
@@ -23,19 +23,29 @@
   html, body { height: 100%; margin: 0; background: var(--bg); font-family: -apple-system, BlinkMacSystemFont, sans-serif; overflow: hidden; }
   body { display: flex; align-items: center; justify-content: center; }
   
-  .calculator { width: 100%; max-width: 600px; padding: 12px; display: flex; flex-direction: column; height: 100%; }
+  .calculator { 
+    width: 100%; 
+    max-width: 600px; 
+    padding: 12px; 
+    display: flex; 
+    flex-direction: column; 
+    height: 100dvh; /* 動的ビューポートで高さを最適化 */
+  }
   
+  /* 履歴エリア：PC・スマホ両方でスクロールしやすく改善 */
   .history { 
     background: rgba(255, 255, 255, 0.05); 
     backdrop-filter: blur(20px); 
     color: #fff; 
-    flex: 1; 
+    flex: 1; /* 余ったスペースをすべて履歴に割り当てる */
     border-radius: 16px; 
-    overflow-y: auto; 
+    overflow-y: auto; /* スクロールを確実に有効化 */
     overflow-x: hidden;
     font-size: 22px; 
     margin-bottom: 12px; 
-    scrollbar-width: none; 
+    scrollbar-width: thin; /* PCでは薄いスクロールバーを表示 */
+    scrollbar-color: var(--btn-dark) transparent;
+    -webkit-overflow-scrolling: touch;
   }
 
   .history-item {
@@ -43,7 +53,7 @@
     background-color: var(--btn-accent); 
     border-bottom: 1px solid rgba(0, 0, 0, 0.2);
     overflow: hidden;
-    user-select: none; /* PCでのドラッグ選択を防止 */
+    user-select: none;
   }
   
   .history-content {
@@ -55,7 +65,7 @@
     display: flex;
     align-items: center;
     min-height: 44px;
-    cursor: grab; /* PCで掴めることを示す */
+    cursor: grab;
   }
   .history-content:active { cursor: grabbing; }
 
@@ -65,7 +75,7 @@
     overflow-x: auto; 
     scrollbar-width: none;
     letter-spacing: -0.04em;
-    pointer-events: none; /* テキスト選択がスワイプを邪魔しないようにする */
+    pointer-events: none;
   }
 
   .delete-label {
@@ -87,6 +97,7 @@
     cursor: pointer;
     position: relative;
     overflow: hidden;
+    flex-shrink: 0; /* 高さを維持 */
   }
   
   .copy-flash {
@@ -99,14 +110,27 @@
     100% { opacity: 0; }
   }
   
-  .keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-  button { height: 75px; border: none; font-size: 26px; color: #fff; background: var(--btn-dark); cursor: pointer; outline: none; }
+  /* キーパッド：PCでは高さを少し抑え、履歴を優先する */
+  .keys { 
+    display: grid; 
+    grid-template-columns: repeat(4, 1fr); 
+    gap: 1px; 
+    background: var(--border); 
+    border: 1px solid var(--border); 
+    border-radius: 8px; 
+    overflow: hidden; 
+    flex-shrink: 0;
+  }
+  button { height: 70px; border: none; font-size: 26px; color: #fff; background: var(--btn-dark); cursor: pointer; outline: none; }
   button:active { filter: brightness(1.6); }
   .op, .equal { background: var(--btn-accent); color: #000; font-weight: 600; font-size: 30px; }
   .gray { background: var(--btn-gray); color: #000; }
   .zero { grid-column: span 2; text-align: left; padding-left: 35px; }
 
-  @media (min-width: 768px) { button { height: 90px; font-size: 34px; } }
+  /* デスクトップ環境での微調整 */
+  @media (min-height: 800px) {
+    button { height: 85px; font-size: 30px; }
+  }
 </style>
 </head>
 <body>
@@ -147,6 +171,7 @@ function loadHistoryFromLocal() {
   const data = JSON.parse(localStorage.getItem("calcHistory") || "[]");
   data.forEach(text => ui.createHistoryElement(text, true));
   ui.updateTotal();
+  ui.scrollToBottom();
 }
 
 const state = {
@@ -191,6 +216,13 @@ const ui = {
     this.total.textContent = `合計: ${this.format(parseFloat(sum.toPrecision(12)))}`;
   },
 
+  scrollToBottom() {
+    // タイミングを微調整して確実にスクロール
+    requestAnimationFrame(() => {
+      this.history.scrollTop = this.history.scrollHeight;
+    });
+  },
+
   createHistoryElement(text, isFinal) {
     const item = document.createElement("div");
     item.className = "history-item";
@@ -212,7 +244,7 @@ const ui = {
     let expr = state.formula.map(i => ["+","-","*","/"].includes(i) ? this.toSymbol(i) : this.format(i)).join("");
     expr += this.format(state.current);
     item.querySelector(".text").textContent = expr || "0";
-    this.history.scrollTop = this.history.scrollHeight;
+    this.scrollToBottom();
   },
 
   finalize(expr, res, omit) {
@@ -223,9 +255,9 @@ const ui = {
     item.querySelector(".text").textContent = finalStr;
     this.attachSwipe(item);
     this.updateTotal();
+    this.scrollToBottom();
   },
 
-  /* PC/スマホ両対応のスワイプ（ドラッグ）処理 */
   attachSwipe(el) {
     const content = el.querySelector(".history-content");
     let startX = 0, currentX = 0, isOpen = false, isDragging = false;
@@ -259,14 +291,12 @@ const ui = {
       }
     };
 
-    // Touch Events
     el.addEventListener("touchstart", e => onStart(e.touches[0].pageX), {passive: true});
-    window.addEventListener("touchmove", e => onMove(e.touches[0].pageX), {passive: false});
+    window.addEventListener("touchmove", e => { if(isDragging) onMove(e.touches[0].pageX); }, {passive: false});
     window.addEventListener("touchend", onEnd);
 
-    // Mouse Events
     el.addEventListener("mousedown", e => onStart(e.pageX));
-    window.addEventListener("mousemove", e => onMove(e.pageX));
+    window.addEventListener("mousemove", e => { if(isDragging) onMove(e.pageX); });
     window.addEventListener("mouseup", onEnd);
 
     el.querySelector(".delete-label").addEventListener("click", () => {
