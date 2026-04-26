@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8" />
-<title>履歴付き電卓 (安定表示版)</title>
+<title>履歴付き電卓 (安定版)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 
 <link rel="apple-touch-icon" sizes="192x192" href="./icon-192.png">
@@ -23,7 +23,6 @@
   html, body { height: 100%; margin: 0; background: var(--bg); font-family: -apple-system, BlinkMacSystemFont, sans-serif; overflow: hidden; }
   body { display: flex; align-items: center; justify-content: center; }
   
-  /* 全体コンテナ：高さを100%確保 */
   .calculator { 
     width: 100%; 
     max-width: 600px; 
@@ -34,12 +33,11 @@
     height: 100dvh; 
   }
   
-  /* 履歴エリア：最小高さを設定し、確実に表示させる */
   .history { 
     background: rgba(255, 255, 255, 0.05); 
     backdrop-filter: blur(20px); 
     color: #fff; 
-    flex: 1 1 200px; /* 最小200pxは確保しつつ広がる */
+    flex: 1; 
     border-radius: 16px; 
     overflow-y: auto; 
     overflow-x: hidden;
@@ -48,7 +46,6 @@
     scrollbar-width: thin;
     scrollbar-color: var(--btn-dark) transparent;
     -webkit-overflow-scrolling: touch;
-    display: block; /* 確実に表示 */
   }
 
   .history-item {
@@ -67,8 +64,10 @@
     transition: transform 0.25s ease-out;
     display: flex;
     align-items: center;
-    min-height: 44px;
+    min-height: 48px;
+    cursor: grab;
   }
+  .history-content:active { cursor: grabbing; }
 
   .text { flex: 1; white-space: nowrap; overflow-x: auto; scrollbar-width: none; letter-spacing: -0.04em; pointer-events: none; }
 
@@ -76,6 +75,7 @@
     position: absolute; right: 0; top: 0; bottom: 0; width: 80px;
     display: flex; align-items: center; justify-content: center;
     color: #000; font-size: 16px; font-weight: bold; z-index: 1;
+    cursor: pointer;
   }
 
   .total-box { 
@@ -90,7 +90,7 @@
   @keyframes flash-animation { 0% { opacity: 0.5; } 100% { opacity: 0; } }
   
   .keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; flex-shrink: 0; }
-  button { height: 70px; border: none; font-size: 26px; color: #fff; background: var(--btn-dark); cursor: pointer; outline: none; }
+  button { height: 75px; border: none; font-size: 26px; color: #fff; background: var(--btn-dark); cursor: pointer; outline: none; }
   button:active { filter: brightness(1.6); }
   button:focus { outline: none; }
 
@@ -98,7 +98,7 @@
   .gray { background: var(--btn-gray); color: #000; }
   .zero { grid-column: span 2; text-align: left; padding-left: 35px; }
 
-  @media (min-height: 800px) { button { height: 85px; font-size: 30px; } }
+  @media (min-height: 800px) { button { height: 90px; font-size: 32px; } }
 </style>
 </head>
 <body>
@@ -128,7 +128,7 @@
 
 <script>
 /* -------------------------
-   Storage
+   Logic & Storage
 --------------------------*/
 function saveHistoryToLocal() {
   const lines = [];
@@ -139,12 +139,10 @@ function saveHistoryToLocal() {
 }
 
 function loadHistoryFromLocal() {
-  try {
-    const data = JSON.parse(localStorage.getItem("calcHistory") || "[]");
-    data.forEach(text => ui.createHistoryElement(text, true));
-    ui.updateTotal();
-    ui.scrollToBottom();
-  } catch(e) { console.error("Load Error", e); }
+  const data = JSON.parse(localStorage.getItem("calcHistory") || "[]");
+  data.forEach(text => ui.createHistoryElement(text, true));
+  ui.updateTotal();
+  ui.scrollToBottom();
 }
 
 const state = {
@@ -152,7 +150,15 @@ const state = {
   reset() { this.formula = []; this.current = ""; this.isCalculated = false; },
   execute() {
     let tokens = [...this.formula];
-    if (this.current !== "" && this.current !== "-") tokens.push(this.current);
+    // 末尾が演算子で終わっている場合、その演算子を除去して計算を成立させる
+    if (this.current === "" || this.current === "-") {
+       if (tokens.length > 0 && ["+","-","*","/"].includes(tokens[tokens.length-1])) {
+         tokens.pop();
+       }
+    } else {
+      tokens.push(this.current);
+    }
+    
     if (tokens.length === 0) return 0;
     let res = parseFloat(tokens[0]);
     for (let i = 1; i < tokens.length; i += 2) {
@@ -194,10 +200,7 @@ const ui = {
   },
 
   scrollToBottom() {
-    // 複数のタイミングでスクロールを試行し、確実性を高める
-    const scroll = () => { this.history.scrollTop = this.history.scrollHeight; };
-    scroll();
-    setTimeout(scroll, 50);
+    requestAnimationFrame(() => { this.history.scrollTop = this.history.scrollHeight; });
   },
 
   createHistoryElement(text, isFinal) {
@@ -262,29 +265,16 @@ const ui = {
     el.querySelector(".delete-label").addEventListener("click", () => {
       el.remove(); ui.updateTotal(); saveHistoryToLocal();
     });
-  },
-
-  copyToClipboard() {
-    const lines = [];
-    document.querySelectorAll('.history-item[data-type="history"]').forEach(item => {
-      lines.push(item.querySelector(".text").textContent);
-    });
-    if (lines.length === 0) return;
-    const textToCopy = lines.join("\n") + "\n---\n" + this.total.textContent;
-    navigator.clipboard.writeText(textToCopy).then(() => {
-      this.flash.style.animation = "none";
-      this.flash.offsetHeight;
-      this.flash.style.animation = "flash-animation 0.4s ease-out";
-    });
   }
 };
 
 /* -------------------------
-   Control
+   Control Logic
 --------------------------*/
 function handleInput(val) {
   if (state.isCalculated && !isNaN(val)) state.reset();
   state.isCalculated = false;
+
   if (val === "AC") {
     state.reset(); ui.history.innerHTML = ""; ui.updateTotal(); saveHistoryToLocal();
   } else if (val === "DEL") {
@@ -292,9 +282,12 @@ function handleInput(val) {
     else if (state.formula.length > 0) { state.formula.pop(); state.current = state.formula.pop() || ""; }
   } else if (val === "=") {
     if (state.current === "" && state.formula.length === 0) return;
-    const expr = state.formula.map(i => ["+","-","*","/"].includes(i) ? ui.toSymbol(i) : ui.format(i)).join("") + ui.format(state.current);
+    // 表示用の式を作成
+    let expr = state.formula.map(i => ["+","-","*","/"].includes(i) ? ui.toSymbol(i) : ui.format(i)).join("");
+    expr += ui.format(state.current);
+    
     const res = state.execute();
-    ui.finalize(expr, res, (state.formula.length === 0));
+    ui.finalize(expr, res, (state.formula.length === 0 || (state.formula.length === 1 && state.current === "")));
     saveHistoryToLocal(); state.reset(); state.isCalculated = true;
   } else if (["+", "-", "*", "/"].includes(val)) {
     if (val === "-" && state.current === "" && state.formula.length === 0) state.current = "-";
@@ -310,14 +303,28 @@ function handleInput(val) {
 /* -------------------------
    Events
 --------------------------*/
-document.getElementById("keypad").addEventListener("click", e => {
+// pointerdownで反応させ、クリック時の重複を防ぐ
+document.getElementById("keypad").addEventListener("pointerdown", e => {
   const b = e.target.closest("button");
-  if (!b) return; 
+  if (!b) return;
+  e.preventDefault();
   handleInput(b.dataset.val);
   b.blur();
 });
 
-ui.totalBox.addEventListener("click", () => ui.copyToClipboard());
+ui.totalBox.addEventListener("click", () => {
+  const lines = [];
+  document.querySelectorAll('.history-item[data-type="history"]').forEach(item => {
+    lines.push(item.querySelector(".text").textContent);
+  });
+  if (lines.length === 0) return;
+  const textToCopy = lines.join("\n") + "\n---\n" + ui.total.textContent;
+  navigator.clipboard.writeText(textToCopy).then(() => {
+    ui.flash.style.animation = "none";
+    ui.flash.offsetHeight;
+    ui.flash.style.animation = "flash-animation 0.4s ease-out";
+  });
+});
 
 window.addEventListener("keydown", e => {
   const keyMap = {
@@ -326,7 +333,10 @@ window.addEventListener("keydown", e => {
     'Enter':'=','=':'=', 'Backspace':'DEL', 'Delete':'DEL', 'Escape':'AC'
   };
   const val = keyMap[e.key];
-  if (val) { e.preventDefault(); handleInput(val); }
+  if (val) {
+    e.preventDefault();
+    handleInput(val);
+  }
 });
 
 loadHistoryFromLocal();
