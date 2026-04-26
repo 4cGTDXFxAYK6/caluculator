@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8" />
-<title>履歴付き電卓 (キーボード修正版)</title>
+<title>履歴付き電卓 (安定表示版)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 
 <link rel="apple-touch-icon" sizes="192x192" href="./icon-192.png">
@@ -23,13 +23,23 @@
   html, body { height: 100%; margin: 0; background: var(--bg); font-family: -apple-system, BlinkMacSystemFont, sans-serif; overflow: hidden; }
   body { display: flex; align-items: center; justify-content: center; }
   
-  .calculator { width: 100%; max-width: 600px; padding: 12px; display: flex; flex-direction: column; height: 100dvh; }
+  /* 全体コンテナ：高さを100%確保 */
+  .calculator { 
+    width: 100%; 
+    max-width: 600px; 
+    padding: 12px; 
+    display: flex; 
+    flex-direction: column; 
+    height: 100vh; 
+    height: 100dvh; 
+  }
   
+  /* 履歴エリア：最小高さを設定し、確実に表示させる */
   .history { 
     background: rgba(255, 255, 255, 0.05); 
     backdrop-filter: blur(20px); 
     color: #fff; 
-    flex: 1; 
+    flex: 1 1 200px; /* 最小200pxは確保しつつ広がる */
     border-radius: 16px; 
     overflow-y: auto; 
     overflow-x: hidden;
@@ -38,6 +48,7 @@
     scrollbar-width: thin;
     scrollbar-color: var(--btn-dark) transparent;
     -webkit-overflow-scrolling: touch;
+    display: block; /* 確実に表示 */
   }
 
   .history-item {
@@ -57,7 +68,6 @@
     display: flex;
     align-items: center;
     min-height: 44px;
-    cursor: grab;
   }
 
   .text { flex: 1; white-space: nowrap; overflow-x: auto; scrollbar-width: none; letter-spacing: -0.04em; pointer-events: none; }
@@ -66,7 +76,6 @@
     position: absolute; right: 0; top: 0; bottom: 0; width: 80px;
     display: flex; align-items: center; justify-content: center;
     color: #000; font-size: 16px; font-weight: bold; z-index: 1;
-    cursor: pointer;
   }
 
   .total-box { 
@@ -83,7 +92,6 @@
   .keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; flex-shrink: 0; }
   button { height: 70px; border: none; font-size: 26px; color: #fff; background: var(--btn-dark); cursor: pointer; outline: none; }
   button:active { filter: brightness(1.6); }
-  /* フォーカス時の枠線を消す */
   button:focus { outline: none; }
 
   .op, .equal { background: var(--btn-accent); color: #000; font-weight: 600; font-size: 30px; }
@@ -120,7 +128,7 @@
 
 <script>
 /* -------------------------
-   Logic & Storage
+   Storage
 --------------------------*/
 function saveHistoryToLocal() {
   const lines = [];
@@ -131,10 +139,12 @@ function saveHistoryToLocal() {
 }
 
 function loadHistoryFromLocal() {
-  const data = JSON.parse(localStorage.getItem("calcHistory") || "[]");
-  data.forEach(text => ui.createHistoryElement(text, true));
-  ui.updateTotal();
-  ui.scrollToBottom();
+  try {
+    const data = JSON.parse(localStorage.getItem("calcHistory") || "[]");
+    data.forEach(text => ui.createHistoryElement(text, true));
+    ui.updateTotal();
+    ui.scrollToBottom();
+  } catch(e) { console.error("Load Error", e); }
 }
 
 const state = {
@@ -176,14 +186,18 @@ const ui = {
   updateTotal() {
     let sum = 0;
     this.history.querySelectorAll('.history-item[data-type="history"]').forEach(item => {
-      const val = item.querySelector(".text").textContent.split("=").pop().replace(/,/g,"").trim();
+      const parts = item.querySelector(".text").textContent.split("=");
+      const val = (parts.length > 1 ? parts[1] : parts[0]).replace(/,/g,"").trim();
       sum += parseFloat(val) || 0;
     });
     this.total.textContent = `合計: ${this.format(parseFloat(sum.toPrecision(12)))}`;
   },
 
   scrollToBottom() {
-    requestAnimationFrame(() => { this.history.scrollTop = this.history.scrollHeight; });
+    // 複数のタイミングでスクロールを試行し、確実性を高める
+    const scroll = () => { this.history.scrollTop = this.history.scrollHeight; };
+    scroll();
+    setTimeout(scroll, 50);
   },
 
   createHistoryElement(text, isFinal) {
@@ -266,7 +280,7 @@ const ui = {
 };
 
 /* -------------------------
-   Control Logic
+   Control
 --------------------------*/
 function handleInput(val) {
   if (state.isCalculated && !isNaN(val)) state.reset();
@@ -294,14 +308,12 @@ function handleInput(val) {
 }
 
 /* -------------------------
-   Event Listeners
+   Events
 --------------------------*/
-document.getElementById("keypad").addEventListener("pointerdown", e => {
+document.getElementById("keypad").addEventListener("click", e => {
   const b = e.target.closest("button");
   if (!b) return; 
-  e.preventDefault(); 
   handleInput(b.dataset.val);
-  // 重要：クリック後にフォーカスを外して、キーボードのEnter等との重複を防ぐ
   b.blur();
 });
 
@@ -309,4 +321,16 @@ ui.totalBox.addEventListener("click", () => ui.copyToClipboard());
 
 window.addEventListener("keydown", e => {
   const keyMap = {
-    '0': '0', '1': '1', '2': '2',
+    '0':'0','1':'1','2':'2','3':'3','4':'4','5':'5','6':'6','7':'7','8':'8','9':'9',
+    '.':'.','+':'+','-':'-','*':'*','/':'/',
+    'Enter':'=','=':'=', 'Backspace':'DEL', 'Delete':'DEL', 'Escape':'AC'
+  };
+  const val = keyMap[e.key];
+  if (val) { e.preventDefault(); handleInput(val); }
+});
+
+loadHistoryFromLocal();
+ui.renderInput();
+</script>
+</body>
+</html>
