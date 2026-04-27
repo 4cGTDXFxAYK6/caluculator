@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8" />
-<title>履歴付き電卓 (安定版)</title>
+<title>履歴付き電卓 (演算子自動クリーン版)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 
 <link rel="apple-touch-icon" sizes="192x192" href="./icon-192.png">
@@ -67,7 +67,6 @@
     min-height: 48px;
     cursor: grab;
   }
-  .history-content:active { cursor: grabbing; }
 
   .text { flex: 1; white-space: nowrap; overflow-x: auto; scrollbar-width: none; letter-spacing: -0.04em; pointer-events: none; }
 
@@ -92,7 +91,6 @@
   .keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; flex-shrink: 0; }
   button { height: 75px; border: none; font-size: 26px; color: #fff; background: var(--btn-dark); cursor: pointer; outline: none; }
   button:active { filter: brightness(1.6); }
-  button:focus { outline: none; }
 
   .op, .equal { background: var(--btn-accent); color: #000; font-weight: 600; font-size: 30px; }
   .gray { background: var(--btn-gray); color: #000; }
@@ -127,9 +125,7 @@
 </div>
 
 <script>
-/* -------------------------
-   Logic & Storage
---------------------------*/
+/* --- Logic & Storage --- */
 function saveHistoryToLocal() {
   const lines = [];
   document.querySelectorAll('.history-item[data-type="history"]').forEach(item => {
@@ -150,15 +146,7 @@ const state = {
   reset() { this.formula = []; this.current = ""; this.isCalculated = false; },
   execute() {
     let tokens = [...this.formula];
-    // 末尾が演算子で終わっている場合、その演算子を除去して計算を成立させる
-    if (this.current === "" || this.current === "-") {
-       if (tokens.length > 0 && ["+","-","*","/"].includes(tokens[tokens.length-1])) {
-         tokens.pop();
-       }
-    } else {
-      tokens.push(this.current);
-    }
-    
+    if (this.current !== "" && this.current !== "-") tokens.push(this.current);
     if (tokens.length === 0) return 0;
     let res = parseFloat(tokens[0]);
     for (let i = 1; i < tokens.length; i += 2) {
@@ -171,24 +159,19 @@ const state = {
   }
 };
 
-/* -------------------------
-   UI Components
---------------------------*/
+/* --- UI --- */
 const ui = {
   history: document.getElementById("history"),
   total: document.getElementById("totalText"),
   totalBox: document.getElementById("totalBox"),
   flash: document.getElementById("flash"),
-
   format: n => {
     if (n === "-" || n === "" || n === null || isNaN(n)) return n;
     const p = String(n).split(".");
     p[0] = Number(p[0]).toLocaleString("ja-JP");
     return p.join(".");
   },
-
   toSymbol: s => s.replace(/\*/g,"×").replace(/\//g,"÷"),
-
   updateTotal() {
     let sum = 0;
     this.history.querySelectorAll('.history-item[data-type="history"]').forEach(item => {
@@ -198,11 +181,9 @@ const ui = {
     });
     this.total.textContent = `合計: ${this.format(parseFloat(sum.toPrecision(12)))}`;
   },
-
   scrollToBottom() {
     requestAnimationFrame(() => { this.history.scrollTop = this.history.scrollHeight; });
   },
-
   createHistoryElement(text, isFinal) {
     const item = document.createElement("div");
     item.className = "history-item";
@@ -215,7 +196,6 @@ const ui = {
     if (isFinal) this.attachSwipe(item);
     return item;
   },
-
   renderInput() {
     let item = this.history.lastElementChild;
     if (!item || item.dataset.type !== "input") {
@@ -226,7 +206,6 @@ const ui = {
     item.querySelector(".text").textContent = expr || "0";
     this.scrollToBottom();
   },
-
   finalize(expr, res, omit) {
     const item = this.history.lastElementChild;
     if (!item) return;
@@ -237,7 +216,6 @@ const ui = {
     this.updateTotal();
     this.scrollToBottom();
   },
-
   attachSwipe(el) {
     const content = el.querySelector(".history-content");
     let startX = 0, currentX = 0, isOpen = false, isDragging = false;
@@ -268,9 +246,7 @@ const ui = {
   }
 };
 
-/* -------------------------
-   Control Logic
---------------------------*/
+/* --- Control --- */
 function handleInput(val) {
   if (state.isCalculated && !isNaN(val)) state.reset();
   state.isCalculated = false;
@@ -282,12 +258,23 @@ function handleInput(val) {
     else if (state.formula.length > 0) { state.formula.pop(); state.current = state.formula.pop() || ""; }
   } else if (val === "=") {
     if (state.current === "" && state.formula.length === 0) return;
-    // 表示用の式を作成
+    
+    // 【重要】確定前に末尾の演算子をクリーンアップ
+    if (state.current === "" && state.formula.length > 0) {
+      const last = state.formula[state.formula.length - 1];
+      if (["+", "-", "*", "/"].includes(last)) {
+        state.formula.pop(); // 演算子を消去
+      }
+    }
+
+    // クリーンアップ後の式を作成
     let expr = state.formula.map(i => ["+","-","*","/"].includes(i) ? ui.toSymbol(i) : ui.format(i)).join("");
     expr += ui.format(state.current);
     
     const res = state.execute();
-    ui.finalize(expr, res, (state.formula.length === 0 || (state.formula.length === 1 && state.current === "")));
+    // 数字が1つの場合は式を省略
+    const isSingle = state.formula.length === 0 || (state.formula.length === 0 && state.current !== "");
+    ui.finalize(expr, res, isSingle);
     saveHistoryToLocal(); state.reset(); state.isCalculated = true;
   } else if (["+", "-", "*", "/"].includes(val)) {
     if (val === "-" && state.current === "" && state.formula.length === 0) state.current = "-";
@@ -300,10 +287,7 @@ function handleInput(val) {
   ui.renderInput();
 }
 
-/* -------------------------
-   Events
---------------------------*/
-// pointerdownで反応させ、クリック時の重複を防ぐ
+/* --- Events --- */
 document.getElementById("keypad").addEventListener("pointerdown", e => {
   const b = e.target.closest("button");
   if (!b) return;
@@ -333,14 +317,4 @@ window.addEventListener("keydown", e => {
     'Enter':'=','=':'=', 'Backspace':'DEL', 'Delete':'DEL', 'Escape':'AC'
   };
   const val = keyMap[e.key];
-  if (val) {
-    e.preventDefault();
-    handleInput(val);
-  }
-});
-
-loadHistoryFromLocal();
-ui.renderInput();
-</script>
-</body>
-</html>
+  if (
