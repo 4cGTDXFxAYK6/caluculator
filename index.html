@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8" />
-<title>履歴付き電卓 (レイアウト調整版)</title>
+<title>履歴付き電卓 (極低重心版)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 
 <link rel="apple-touch-icon" sizes="192x192" href="./icon-192.png">
@@ -29,7 +29,6 @@
   
   body { display: flex; align-items: center; justify-content: center; }
   
-  /* メインコンテナ */
   .calculator { 
     width: 100%; 
     max-width: 600px; 
@@ -37,32 +36,34 @@
     flex-direction: column; 
     height: 100vh; 
     height: 100dvh; 
-    /* 上下のセーフエリア対応 */
     padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
+    /* 左右のセーフエリアのみ確保 */
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
     background: var(--bg);
   }
   
-  /* 履歴エリア */
+  /* 履歴：行間を狭く (padding 12px → 6px) */
   .history { 
     background: rgba(255, 255, 255, 0.05); 
-    color: #fff; flex: 1; border-radius: 16px; 
-    overflow-y: auto; overflow-x: hidden; font-size: 24px; 
-    margin: 8px 12px 4px 12px; 
+    color: #fff; flex: 1; border-radius: 12px; 
+    overflow-y: auto; overflow-x: hidden; font-size: 22px; 
+    margin: 4px 10px; 
     scrollbar-width: thin; -webkit-overflow-scrolling: touch;
   }
 
   .history-item {
     position: relative; background-color: var(--btn-accent); 
-    border-bottom: 1px solid rgba(0, 0, 0, 0.2); overflow: hidden;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05); overflow: hidden;
   }
   
   .history-content {
-    background-color: #121212; padding: 12px 16px; position: relative;
+    background-color: #121212; 
+    padding: 6px 14px; /* 上下パディングを狭く */
+    position: relative;
     z-index: 2; transition: transform 0.2s ease-out; display: flex;
-    align-items: center; min-height: 56px;
+    align-items: center; 
+    min-height: 42px; /* 高さを圧縮 */
   }
 
   .text { flex: 1; white-space: nowrap; overflow-x: auto; scrollbar-width: none; pointer-events: none; }
@@ -70,37 +71,37 @@
   .delete-label {
     position: absolute; right: 0; top: 0; bottom: 0; width: 80px;
     display: flex; align-items: center; justify-content: center;
-    color: #000; font-size: 16px; font-weight: bold; z-index: 1;
+    color: #000; font-size: 15px; font-weight: bold; z-index: 1;
   }
 
-  /* 合計ボックス：下のマージンを縮小 */
+  /* 合計ボックス */
   .total-box { 
-    background: rgba(255, 255, 255, 0.1); color: #fff; padding: 14px 16px; 
-    border-radius: 14px; font-size: 26px; text-align: right; 
-    margin: 0 12px 6px 12px; 
+    background: rgba(255, 255, 255, 0.12); color: #fff; padding: 10px 16px; 
+    border-radius: 10px; font-size: 24px; text-align: right; 
+    margin: 0 10px 6px 10px; 
     font-weight: 600; cursor: pointer; position: relative; overflow: hidden; flex-shrink: 0;
   }
   
   .copy-flash { position: absolute; inset: 0; background: var(--btn-accent); opacity: 0; pointer-events: none; }
   @keyframes flash-animation { 0% { opacity: 0.5; } 100% { opacity: 0; } }
   
-  /* キーパッド：下のマージンを最小限にして位置を下げる */
+  /* キーパッド：位置を最下部へ */
   .keys { 
     display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; 
     background: var(--border); border: 1px solid var(--border); 
-    margin: 0 12px 4px 12px;
+    /* 下マージンをセーフエリアのみに設定して最下部へ */
+    margin: 0 10px env(safe-area-inset-bottom) 10px;
     border-radius: 12px; overflow: hidden; flex-shrink: 0; 
   }
   
-  button { height: 75px; border: none; font-size: 28px; color: #fff; background: var(--btn-dark); cursor: pointer; outline: none; }
+  button { height: 72px; border: none; font-size: 26px; color: #fff; background: var(--btn-dark); cursor: pointer; outline: none; }
   button:active { filter: brightness(1.6); }
 
-  .op, .equal { background: var(--btn-accent); color: #000; font-weight: 600; font-size: 32px; }
+  .op, .equal { background: var(--btn-accent); color: #000; font-weight: 600; font-size: 30px; }
   .gray { background: var(--btn-gray); color: #000; }
   .zero { grid-column: span 2; text-align: left; padding-left: 35px; }
 
-  /* 画面の高さに余裕がある場合のボタンサイズ調整 */
-  @media (min-height: 800px) { button { height: 85px; font-size: 34px; } }
+  @media (min-height: 800px) { button { height: 82px; font-size: 32px; } }
 </style>
 </head>
 <body>
@@ -130,7 +131,7 @@
 
 <script>
 /* -------------------------
-   Logic (安定版)
+   Calculator Logic
 --------------------------*/
 const state = {
   formula: [], current: "", isCalculated: false,
@@ -139,8 +140,10 @@ const state = {
     let tokens = [...this.formula];
     if (this.current !== "" && this.current !== "-") tokens.push(this.current);
     if (tokens.length === 0) return 0;
+    // 末尾の演算子を無視
     while (tokens.length > 0 && ["+","-","*","/"].includes(tokens[tokens.length-1])) tokens.pop();
     if (tokens.length === 0) return 0;
+
     let res = parseFloat(tokens[0]);
     for (let i = 1; i < tokens.length; i += 2) {
       let op = tokens[i], nextVal = parseFloat(tokens[i+1]);
@@ -235,6 +238,9 @@ const ui = {
   }
 };
 
+/* -------------------------
+   Data Persistence
+--------------------------*/
 function saveHistory() {
   const lines = [];
   document.querySelectorAll('.history-item[data-type="history"]').forEach(item => {
@@ -251,6 +257,9 @@ function loadHistory() {
   } catch(e) { localStorage.removeItem("calcHistory"); }
 }
 
+/* -------------------------
+   Event Handlers
+--------------------------*/
 function handleInput(val) {
   if (state.isCalculated && !isNaN(val)) state.reset();
   state.isCalculated = false;
