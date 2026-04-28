@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8" />
-<title>履歴付き電卓 (演算子表示修正版)</title>
+<title>履歴付き電卓 (表示最適化版)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 
 <link rel="apple-touch-icon" sizes="192x192" href="./icon-192.png">
@@ -109,7 +109,7 @@
 </div>
 
 <script>
-/* --- 共通処理 --- */
+/* --- ロジック --- */
 function saveHistory() {
   const lines = Array.from(document.querySelectorAll('.history-item[data-type="history"]')).map(i => i.querySelector(".text").textContent);
   localStorage.setItem("calcHistory", JSON.stringify(lines));
@@ -189,11 +189,16 @@ const ui = {
     item.querySelector(".text").textContent = expr || "0";
     this.scrollToBottom();
   },
-  finalize(expr, res, omit) {
+  finalize(expr, res) {
     const item = this.history.lastElementChild;
     if (!item) return;
+    const formattedRes = this.format(res);
+    
+    // 【重要】式と結果が同じ文字列なら、イコールを付けずに結果のみ表示
+    const finalDisplay = (expr === formattedRes) ? formattedRes : `${expr}=${formattedRes}`;
+    
     item.dataset.type = "history";
-    item.querySelector(".text").textContent = omit ? this.format(res) : `${expr}=${this.format(res)}`;
+    item.querySelector(".text").textContent = finalDisplay;
     this.attachSwipe(item);
     this.updateTotal();
     saveHistory();
@@ -239,21 +244,18 @@ function handleInput(val) {
   } else if (val === "=") {
     if (state.current === "" && state.formula.length === 0) return;
     
-    // 【修正箇所】表示用の式を作る前に、内部状態から末尾の演算子を物理的に取り除く
+    // 表示用の式を作る前に末尾の演算子を処理
     if (state.current === "" || state.current === "-") {
       if (state.formula.length > 0 && ["+","-","*","/"].includes(state.formula[state.formula.length-1])) {
         state.formula.pop();
       }
     }
     
-    // クリーンになった状態で式を作成
     let expr = state.formula.map(i => ["+","-","*","/"].includes(i) ? ui.toSymbol(i) : ui.format(i)).join("");
     expr += ui.format(state.current);
     
     const res = state.execute();
-    // 数字1つだけの場合は式を表示しない(omit)
-    const isSingleNumber = (state.formula.length === 0);
-    ui.finalize(expr, res, isSingleNumber);
+    ui.finalize(expr, res); // 判定はfinalize内部で行う
     state.reset(); 
     state.isCalculated = true;
   } else if (["+", "-", "*", "/"].includes(val)) {
