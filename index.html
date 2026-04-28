@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8" />
-<title>履歴付き電卓 (ハイブリッド・レイアウト)</title>
+<title>履歴付き電卓 (演算子表示修正版)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 
 <link rel="apple-touch-icon" sizes="192x192" href="./icon-192.png">
@@ -23,7 +23,6 @@
   html, body { height: 100%; margin: 0; background: var(--bg); font-family: -apple-system, BlinkMacSystemFont, sans-serif; overflow: hidden; }
   body { display: flex; align-items: center; justify-content: center; }
   
-  /* メインコンテナ：通常は縦並び */
   .calculator { 
     width: 100%; 
     max-width: 100%; 
@@ -35,24 +34,11 @@
     gap: 10px;
   }
 
-  /* 【重要】横画面（PC・タブレット）の時のレイアウト切り替え */
+  /* 横画面（PC・タブレット）レイアウト */
   @media (orientation: landscape) and (min-width: 600px) {
-    .calculator {
-      flex-direction: row; /* 横並びに変更 */
-      padding: 20px;
-      gap: 20px;
-    }
-    .main-display {
-      flex: 1.2; /* 左側の履歴エリアを少し広めに */
-      height: 100%;
-    }
-    .key-container {
-      flex: 1; /* 右側のキーパッド */
-      max-width: 500px; /* ボタンが伸びすぎないよう制限 */
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-    }
+    .calculator { flex-direction: row; padding: 20px; gap: 20px; }
+    .main-display { flex: 1.2; height: 100%; }
+    .key-container { flex: 1; max-width: 500px; display: flex; flex-direction: column; justify-content: flex-end; }
     .history { height: 100% !important; margin-bottom: 0 !important; }
   }
 
@@ -73,9 +59,6 @@
   .history-content { background-color: #121212; padding: 12px 16px; position: relative; z-index: 2; transition: transform 0.25s ease-out; display: flex; align-items: center; min-height: 50px; cursor: grab; }
   .text { flex: 1; white-space: nowrap; overflow-x: auto; scrollbar-width: none; pointer-events: none; }
   .delete-label { position: absolute; right: 0; top: 0; bottom: 0; width: 80px; display: flex; align-items: center; justify-content: center; color: #000; font-weight: bold; z-index: 1; }
-
-  /* 合計とボタンのコンテナ */
-  .key-container { flex-shrink: 0; }
 
   .total-box { 
     background: rgba(255, 255, 255, 0.1); 
@@ -102,7 +85,6 @@
   <div class="main-display" style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
     <div id="history" class="history"></div>
   </div>
-
   <div class="key-container">
     <div id="totalBox" class="total-box">
       <div id="flash" class="copy-flash"></div>
@@ -127,7 +109,7 @@
 </div>
 
 <script>
-/* --- ロジック --- */
+/* --- 共通処理 --- */
 function saveHistory() {
   const lines = Array.from(document.querySelectorAll('.history-item[data-type="history"]')).map(i => i.querySelector(".text").textContent);
   localStorage.setItem("calcHistory", JSON.stringify(lines));
@@ -143,11 +125,20 @@ function loadHistory() {
 const state = {
   formula: [], current: "", isCalculated: false,
   reset() { this.formula = []; this.current = ""; this.isCalculated = false; },
-  execute() {
+  
+  // 計算用の末尾クリーンアップ
+  getCleanTokens() {
     let tokens = [...this.formula];
     if (this.current === "" || this.current === "-") {
       if (tokens.length > 0 && ["+","-","*","/"].includes(tokens[tokens.length-1])) tokens.pop();
-    } else tokens.push(this.current);
+    } else {
+      tokens.push(this.current);
+    }
+    return tokens;
+  },
+
+  execute() {
+    const tokens = this.getCleanTokens();
     if (tokens.length === 0) return 0;
     let res = parseFloat(tokens[0]);
     for (let i = 1; i < tokens.length; i += 2) {
@@ -239,16 +230,32 @@ const ui = {
 function handleInput(val) {
   if (state.isCalculated && !isNaN(val)) state.reset();
   state.isCalculated = false;
-  if (val === "AC") { state.reset(); ui.history.innerHTML = ""; ui.updateTotal(); saveHistory(); } 
-  else if (val === "DEL") {
+
+  if (val === "AC") {
+    state.reset(); ui.history.innerHTML = ""; ui.updateTotal(); saveHistory();
+  } else if (val === "DEL") {
     if (state.current !== "") state.current = state.current.slice(0, -1);
     else if (state.formula.length > 0) { state.formula.pop(); state.current = state.formula.pop() || ""; }
   } else if (val === "=") {
     if (state.current === "" && state.formula.length === 0) return;
-    let expr = state.formula.map(i => ["+","-","*","/"].includes(i) ? ui.toSymbol(i) : ui.format(i)).join("") + ui.format(state.current);
+    
+    // 【修正箇所】表示用の式を作る前に、内部状態から末尾の演算子を物理的に取り除く
+    if (state.current === "" || state.current === "-") {
+      if (state.formula.length > 0 && ["+","-","*","/"].includes(state.formula[state.formula.length-1])) {
+        state.formula.pop();
+      }
+    }
+    
+    // クリーンになった状態で式を作成
+    let expr = state.formula.map(i => ["+","-","*","/"].includes(i) ? ui.toSymbol(i) : ui.format(i)).join("");
+    expr += ui.format(state.current);
+    
     const res = state.execute();
-    ui.finalize(expr, res, (state.formula.length === 0 || (state.formula.length === 1 && state.current === "")));
-    state.reset(); state.isCalculated = true;
+    // 数字1つだけの場合は式を表示しない(omit)
+    const isSingleNumber = (state.formula.length === 0);
+    ui.finalize(expr, res, isSingleNumber);
+    state.reset(); 
+    state.isCalculated = true;
   } else if (["+", "-", "*", "/"].includes(val)) {
     if (val === "-" && state.current === "" && state.formula.length === 0) state.current = "-";
     else if (state.current !== "" && state.current !== "-") { state.formula.push(state.current); state.formula.push(val); state.current = ""; }
