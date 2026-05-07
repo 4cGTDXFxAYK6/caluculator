@@ -16,51 +16,38 @@
     --bg: #000;
     --btn-dark: #2c2c2e;
     --btn-gray: #a5a5a5;
-    --btn-accent: #ff9f0a; 
-    --border: rgba(255, 255, 255, 0.1);
+    --btn-accent: #ff9f0a;
+    --border: rgba(255,255,255,0.1);
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  
-  html, body { 
-    height: 100%; margin: 0; background: var(--bg); 
-    font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
-    overflow: hidden; 
-  }
-  
+  html, body { height: 100%; margin: 0; background: var(--bg); font-family: -apple-system, BlinkMacSystemFont, sans-serif; overflow: hidden; }
   body { display: flex; align-items: center; justify-content: center; }
-  
-  /* 基本構造：縦型レイアウト */
-  .calculator { 
-    width: 100%; 
-    height: 100vh; 
-    height: 100dvh; 
-    display: flex; 
-    flex-direction: column; 
+
+  .calculator {
+    width: 100%; height: 100vh; height: 100dvh;
+    display: flex; flex-direction: column;
     padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
     background: var(--bg);
   }
 
-  /* 履歴エリア：行間を狭く設定 */
-  .history { 
-    background: rgba(255, 255, 255, 0.05); 
-    color: #fff; flex: 1; border-radius: 12px; 
-    overflow-y: auto; overflow-x: hidden; font-size: 22px; 
-    margin: 4px 10px; 
+  .history {
+    background: rgba(255,255,255,0.05); color: #fff;
+    flex: 1; border-radius: 12px;
+    overflow-y: auto; overflow-x: hidden; font-size: 22px;
+    margin: 4px 10px;
     scrollbar-width: thin; -webkit-overflow-scrolling: touch;
   }
 
   .history-item {
-    position: relative; background-color: var(--btn-accent); 
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05); overflow: hidden;
+    position: relative; background-color: var(--btn-accent);
+    border-bottom: 1px solid rgba(255,255,255,0.05); overflow: hidden;
   }
-  
+
   .history-content {
-    background-color: #121212; 
-    padding: 6px 14px; 
-    position: relative;
-    z-index: 2; transition: transform 0.2s ease-out; display: flex;
-    align-items: center; 
-    min-height: 42px; 
+    background-color: #121212; padding: 6px 14px;
+    position: relative; z-index: 2;
+    transition: transform 0.2s ease-out;
+    display: flex; align-items: center; min-height: 42px;
   }
 
   .text { flex: 1; white-space: nowrap; overflow-x: auto; scrollbar-width: none; pointer-events: none; }
@@ -71,61 +58,41 @@
     color: #000; font-size: 15px; font-weight: bold; z-index: 1;
   }
 
-  /* 右側（下側）のコンテナ */
-  .side-controls {
-    display: flex;
-    flex-direction: column;
-    flex-shrink: 0;
+  .side-controls { display: flex; flex-direction: column; flex-shrink: 0; }
+
+  .total-box {
+    background: rgba(255,255,255,0.12); color: #fff; padding: 10px 16px;
+    border-radius: 10px; font-size: 24px; text-align: right;
+    margin: 0 10px 6px 10px; font-weight: 600; cursor: pointer;
+    position: relative; overflow: hidden;
   }
 
-  .total-box { 
-    background: rgba(255, 255, 255, 0.12); color: #fff; padding: 10px 16px; 
-    border-radius: 10px; font-size: 24px; text-align: right; 
-    margin: 0 10px 6px 10px; 
-    font-weight: 600; cursor: pointer; position: relative; overflow: hidden;
-  }
-  
   .copy-flash { position: absolute; inset: 0; background: var(--btn-accent); opacity: 0; pointer-events: none; }
   @keyframes flash-animation { 0% { opacity: 0.5; } 100% { opacity: 0; } }
-  
-  .keys { 
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; 
-    background: var(--border); border: 1px solid var(--border); 
+
+  .keys {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+    background: var(--border); border: 1px solid var(--border);
     margin: 0 10px env(safe-area-inset-bottom) 10px;
     border-radius: 12px; overflow: hidden;
   }
-  
+
   button { height: 72px; border: none; font-size: 26px; color: #fff; background: var(--btn-dark); cursor: pointer; outline: none; }
   button:active { filter: brightness(1.6); }
-
   .op, .equal { background: var(--btn-accent); color: #000; font-weight: 600; font-size: 30px; }
   .gray { background: var(--btn-gray); color: #000; }
   .zero { grid-column: span 2; text-align: left; padding-left: 35px; }
 
-  /* 【重要】スマホ・タブレット横向き時のレイアウト切り替え */
   @media (orientation: landscape) {
-    .calculator {
-      flex-direction: row;
-      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-      gap: 10px;
-    }
-    .history {
-      margin: 0;
-      height: 100%;
-    }
-    .side-controls {
-      width: 45%; /* 横向き時のキーパッドの幅 */
-      justify-content: flex-end;
-    }
-    .total-box, .keys {
-      margin: 0 0 5px 0;
-    }
+    .calculator { flex-direction: row; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); gap: 10px; }
+    .history { margin: 0; height: 100%; }
+    .side-controls { width: 45%; justify-content: flex-end; }
+    .total-box, .keys { margin: 0 0 5px 0; }
     .keys { margin-top: 5px; }
     button { height: 12vh; min-height: 50px; font-size: 22px; }
     .op, .equal { font-size: 24px; }
   }
 
-  /* 縦画面で高さがある場合の調整（iPhone Pro Maxなど） */
   @media (orientation: portrait) and (min-height: 850px) {
     button { height: 85px; font-size: 32px; }
   }
@@ -135,7 +102,6 @@
 
 <div class="calculator">
   <div id="history" class="history"></div>
-
   <div class="side-controls">
     <div id="totalBox" class="total-box">
       <div id="flash" class="copy-flash"></div>
@@ -160,123 +126,137 @@
 </div>
 
 <script>
+const OPS = new Set(["+","-","*","/"]);
+
 /* -------------------------
-   Calculator Logic (修正済)
+   State
 --------------------------*/
 const state = {
   formula: [], current: "", isCalculated: false,
   reset() { this.formula = []; this.current = ""; this.isCalculated = false; },
   execute() {
-    let tokens = [...this.formula];
+    const tokens = [...this.formula];
     if (this.current !== "" && this.current !== "-") tokens.push(this.current);
-    if (tokens.length === 0) return 0;
-    while (tokens.length > 0 && ["+","-","*","/"].includes(tokens[tokens.length-1])) tokens.pop();
-    if (tokens.length === 0) return 0;
-
+    while (tokens.length && OPS.has(tokens[tokens.length - 1])) tokens.pop();
+    if (!tokens.length) return 0;
     let res = parseFloat(tokens[0]);
     for (let i = 1; i < tokens.length; i += 2) {
-      let op = tokens[i], nextVal = parseFloat(tokens[i+1]);
-      if (isNaN(nextVal)) continue;
-      if (op === '+') res += nextVal;
-      if (op === '-') res -= nextVal;
-      if (op === '*') res *= nextVal;
-      if (op === '/') res = nextVal !== 0 ? res / nextVal : 0;
+      const op = tokens[i], v = parseFloat(tokens[i + 1]);
+      if (isNaN(v)) continue;
+      if (op === '+') res += v;
+      else if (op === '-') res -= v;
+      else if (op === '*') res *= v;
+      else if (op === '/') res = v ? res / v : 0;
     }
     return parseFloat(res.toPrecision(12));
   }
 };
 
-const ui = {
-  history: document.getElementById("history"),
-  total: document.getElementById("totalText"),
-  totalBox: document.getElementById("totalBox"),
-  flash: document.getElementById("flash"),
-  format: n => {
-    if (n === "-" || n === "" || n === null || isNaN(n)) return n;
-    const s = String(n);
-    if (s.includes("e")) return s;
-    const p = s.split(".");
-    p[0] = Number(p[0]).toLocaleString("ja-JP");
-    return p.join(".");
-  },
-  toSymbol: s => s.replace(/\*/g,"×").replace(/\//g,"÷"),
-  updateTotal() {
-    let sum = 0;
-    this.history.querySelectorAll('.history-item[data-type="history"]').forEach(item => {
-      const parts = item.querySelector(".text").textContent.split("=");
-      const val = (parts.length > 1 ? parts[1] : parts[0]).replace(/,/g,"").trim();
-      sum += parseFloat(val) || 0;
-    });
-    this.total.textContent = `合計: ${this.format(parseFloat(sum.toPrecision(12)))}`;
-  },
-  scrollToBottom() {
-    requestAnimationFrame(() => { this.history.scrollTop = this.history.scrollHeight; });
-  },
-  createHistoryElement(text, isFinal) {
-    const item = document.createElement("div");
-    item.className = "history-item";
-    item.dataset.type = isFinal ? "history" : "input";
-    item.innerHTML = `
-      <div class="delete-label">削除</div>
-      <div class="history-content"><span class="text">${text}</span></div>
-    `;
-    this.history.appendChild(item);
-    if (isFinal) this.attachSwipe(item);
-    return item;
-  },
-  renderInput() {
-    let item = this.history.lastElementChild;
-    if (!item || item.dataset.type !== "input") item = this.createHistoryElement("", false);
-    let expr = state.formula.map(i => ["+","-","*","/"].includes(i) ? this.toSymbol(i) : this.format(i)).join("");
-    expr += this.format(state.current);
-    item.querySelector(".text").textContent = expr || "0";
-    this.scrollToBottom();
-  },
-  finalize(expr, res, omitEqual) {
-    const item = this.history.lastElementChild;
-    if (!item) return;
-    item.dataset.type = "history";
-    item.querySelector(".text").textContent = omitEqual ? this.format(res) : `${expr}=${this.format(res)}`;
-    this.attachSwipe(item);
-    this.updateTotal();
-    this.scrollToBottom();
-  },
-  attachSwipe(el) {
-    const content = el.querySelector(".history-content");
-    let startX = 0, currentX = 0, isOpen = false, isDragging = false;
-    const onStart = (x) => { startX = x; isDragging = true; content.style.transition = "none"; };
-    const onMove = (x) => {
-      if (!isDragging) return;
-      let diff = x - startX;
-      if (isOpen) diff -= 80;
-      if (diff > 0) diff = 0; if (diff < -120) diff = -120;
-      currentX = diff;
-      content.style.transform = `translateX(${currentX}px)`;
-    };
-    const onEnd = () => {
-      if (!isDragging) return; isDragging = false;
-      content.style.transition = "transform 0.2s ease-out";
-      if (currentX < -40) { content.style.transform = "translateX(-80px)"; isOpen = true; } 
-      else { content.style.transform = "translateX(0px)"; isOpen = false; }
-    };
-    el.addEventListener("touchstart", e => onStart(e.touches[0].pageX), {passive: true});
-    window.addEventListener("touchmove", e => { if(isDragging) onMove(e.touches[0].pageX); }, {passive: false});
-    window.addEventListener("touchend", onEnd);
-    el.addEventListener("mousedown", e => onStart(e.pageX));
-    window.addEventListener("mousemove", e => { if(isDragging) onMove(e.pageX); });
-    window.addEventListener("mouseup", onEnd);
-    el.querySelector(".delete-label").addEventListener("click", () => {
-      el.remove(); ui.updateTotal(); saveHistory();
-    });
-  }
-};
+/* -------------------------
+   UI
+--------------------------*/
+const historyEl = document.getElementById("history");
+const totalText = document.getElementById("totalText");
+const flash     = document.getElementById("flash");
+
+function format(n) {
+  if (n === "-" || n === "" || n == null) return n;
+  const s = String(n);
+  if (s.includes("e")) return s;
+  const [int, dec] = s.split(".");
+  return (dec !== undefined ? Number(int).toLocaleString("ja-JP") + "." + dec : Number(int).toLocaleString("ja-JP"));
+}
+
+function toSymbol(s) { return s.replace(/\*/g, "×").replace(/\//g, "÷"); }
+
+function exprString() {
+  return state.formula.map(t => OPS.has(t) ? toSymbol(t) : format(t)).join("") + format(state.current);
+}
+
+function updateTotal() {
+  let sum = 0;
+  historyEl.querySelectorAll('.history-item[data-type="history"]').forEach(item => {
+    const parts = item.querySelector(".text").textContent.split("=");
+    sum += parseFloat((parts[1] ?? parts[0]).replace(/,/g, "")) || 0;
+  });
+  totalText.textContent = "合計: " + format(parseFloat(sum.toPrecision(12)));
+}
+
+function scrollBottom() {
+  requestAnimationFrame(() => { historyEl.scrollTop = historyEl.scrollHeight; });
+}
+
+/* -------------------------
+   スワイプ：グローバル委譲で一元管理
+--------------------------*/
+let drag = null; // { el, content, startX, currentX, isOpen }
+
+historyEl.addEventListener("touchstart", e => {
+  const item = e.target.closest('.history-item[data-type="history"]');
+  if (!item) return;
+  drag = { el: item, content: item.querySelector(".history-content"), startX: e.touches[0].pageX, currentX: 0, isOpen: false };
+  drag.content.style.transition = "none";
+}, { passive: true });
+
+historyEl.addEventListener("touchmove", e => {
+  if (!drag) return;
+  let diff = e.touches[0].pageX - drag.startX - (drag.isOpen ? 80 : 0);
+  diff = Math.min(0, Math.max(-120, diff));
+  drag.currentX = diff;
+  drag.content.style.transform = `translateX(${diff}px)`;
+}, { passive: true });
+
+historyEl.addEventListener("touchend", () => {
+  if (!drag) return;
+  drag.content.style.transition = "transform 0.2s ease-out";
+  if (drag.currentX < -40) { drag.content.style.transform = "translateX(-80px)"; drag.isOpen = true; }
+  else { drag.content.style.transform = "translateX(0)"; drag.isOpen = false; }
+  drag = null;
+});
+
+// 削除ラベルのクリックも委譲
+historyEl.addEventListener("click", e => {
+  const label = e.target.closest(".delete-label");
+  if (!label) return;
+  label.closest(".history-item").remove();
+  updateTotal();
+  saveHistory();
+});
+
+/* -------------------------
+   履歴アイテム生成
+--------------------------*/
+function createItem(text, isFinal) {
+  const item = document.createElement("div");
+  item.className = "history-item";
+  item.dataset.type = isFinal ? "history" : "input";
+  item.innerHTML = `<div class="delete-label">削除</div><div class="history-content"><span class="text">${text}</span></div>`;
+  historyEl.appendChild(item);
+  return item;
+}
+
+function renderInput() {
+  let item = historyEl.lastElementChild;
+  if (!item || item.dataset.type !== "input") item = createItem("", false);
+  item.querySelector(".text").textContent = exprString() || "0";
+  scrollBottom();
+}
+
+function finalize(expr, res, omitEqual) {
+  const item = historyEl.lastElementChild;
+  if (!item) return;
+  item.dataset.type = "history";
+  item.querySelector(".text").textContent = omitEqual ? format(res) : `${expr}=${format(res)}`;
+  updateTotal();
+  scrollBottom();
+}
 
 /* -------------------------
    Storage
 --------------------------*/
 function saveHistory() {
   const lines = [];
-  document.querySelectorAll('.history-item[data-type="history"]').forEach(item => {
+  historyEl.querySelectorAll('.history-item[data-type="history"]').forEach(item => {
     lines.push(item.querySelector(".text").textContent);
   });
   localStorage.setItem("calcHistory", JSON.stringify(lines));
@@ -284,10 +264,9 @@ function saveHistory() {
 
 function loadHistory() {
   try {
-    const data = JSON.parse(localStorage.getItem("calcHistory") || "[]");
-    data.forEach(text => ui.createHistoryElement(text, true));
-    ui.updateTotal();
-  } catch(e) { localStorage.removeItem("calcHistory"); }
+    JSON.parse(localStorage.getItem("calcHistory") || "[]").forEach(text => createItem(text, true));
+    updateTotal();
+  } catch { localStorage.removeItem("calcHistory"); }
 }
 
 /* -------------------------
@@ -298,65 +277,63 @@ function handleInput(val) {
   state.isCalculated = false;
 
   if (val === "AC") {
-    state.reset(); ui.history.innerHTML = ""; ui.updateTotal(); saveHistory();
+    state.reset(); historyEl.innerHTML = ""; updateTotal(); saveHistory();
   } else if (val === "DEL") {
-    if (state.current !== "") state.current = state.current.slice(0, -1);
-    else if (state.formula.length > 0) { state.formula.pop(); state.current = state.formula.pop() || ""; }
+    if (state.current) state.current = state.current.slice(0, -1);
+    else if (state.formula.length) { state.formula.pop(); state.current = state.formula.pop() || ""; }
   } else if (val === "%") {
-    // 100*4% = 4 となるように現在の数値を変換
-    if (state.current !== "" && state.current !== "-") {
-      state.current = (parseFloat(state.current) / 100).toString();
-    }
+    if (state.current && state.current !== "-") state.current = String(parseFloat(state.current) / 100);
   } else if (val === "=") {
-    if (state.current === "" && state.formula.length === 0) return;
-    while (state.formula.length > 0 && state.current === "" && ["+","-","*","/"].includes(state.formula[state.formula.length-1])) {
-      state.formula.pop();
-    }
+    if (!state.current && !state.formula.length) return;
+    while (state.formula.length && !state.current && OPS.has(state.formula[state.formula.length - 1])) state.formula.pop();
     const res = state.execute();
-    let expr = state.formula.map(i => ["+","-","*","/"].includes(i) ? ui.toSymbol(i) : ui.format(i)).join("") + ui.format(state.current);
-    const hasOp = state.formula.some(i => ["+","-","*","/"].includes(i));
-    ui.finalize(expr, res, !hasOp);
+    const expr = exprString();
+    const hasOp = state.formula.some(t => OPS.has(t));
+    finalize(expr, res, !hasOp);
     saveHistory(); state.reset(); state.isCalculated = true;
-  } else if (["+", "-", "*", "/"].includes(val)) {
-    if (val === "-" && state.current === "" && state.formula.length === 0) {
+  } else if (OPS.has(val)) {
+    if (val === "-" && !state.current && !state.formula.length) {
       state.current = "-";
-    } else if (state.current !== "" && state.current !== "-") {
-      state.formula.push(state.current); 
-      state.formula.push(val); 
-      state.current = "";
-    } else if (state.formula.length > 0) {
+    } else if (state.current && state.current !== "-") {
+      state.formula.push(state.current, val); state.current = "";
+    } else if (state.formula.length) {
       state.formula[state.formula.length - 1] = val;
     }
   } else {
     if (val === "." && state.current.includes(".")) return;
     state.current += val;
   }
-  ui.renderInput();
+  renderInput();
 }
 
+/* -------------------------
+   Event Listeners
+--------------------------*/
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("keypad").addEventListener("pointerdown", e => {
     const b = e.target.closest("button");
     if (b) { e.preventDefault(); handleInput(b.dataset.val); b.blur(); }
   });
-  ui.totalBox.addEventListener("click", () => {
+
+  document.getElementById("totalBox").addEventListener("click", () => {
     const lines = [];
-    document.querySelectorAll('.history-item[data-type="history"]').forEach(item => {
+    historyEl.querySelectorAll('.history-item[data-type="history"]').forEach(item => {
       lines.push(item.querySelector(".text").textContent);
     });
-    if (lines.length === 0) return;
-    const textToCopy = lines.join("\n") + "\n---\n" + ui.total.textContent;
-    navigator.clipboard.writeText(textToCopy).then(() => {
-      ui.flash.style.animation = "none"; ui.flash.offsetHeight;
-      ui.flash.style.animation = "flash-animation 0.4s ease-out";
+    if (!lines.length) return;
+    navigator.clipboard.writeText(lines.join("\n") + "\n---\n" + totalText.textContent).then(() => {
+      flash.style.animation = "none"; flash.offsetHeight;
+      flash.style.animation = "flash-animation 0.4s ease-out";
     });
   });
+
+  const keyMap = {'0':'0','1':'1','2':'2','3':'3','4':'4','5':'5','6':'6','7':'7','8':'8','9':'9','.':'.','+':'+','-':'-','*':'*','/':'/','%':'%','Enter':'=','=':'=','Backspace':'DEL','Escape':'AC'};
   window.addEventListener("keydown", e => {
-    const keyMap = {'0':'0','1':'1','2':'2','3':'3','4':'4','5':'5','6':'6','7':'7','8':'8','9':'9','.':'.','+':'+','-':'-','*':'*','/':'/','%':'%','Enter':'=','=':'=','Backspace':'DEL','Escape':'AC'};
     if (keyMap[e.key]) { e.preventDefault(); handleInput(keyMap[e.key]); }
   });
+
   loadHistory();
-  ui.renderInput();
+  renderInput();
 });
 </script>
 </body>
