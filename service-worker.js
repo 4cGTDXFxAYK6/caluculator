@@ -1,14 +1,14 @@
 // ===============================
 //  PWA キャッシュ設定
 // ===============================
-const CACHE_VERSION = 'v89';   // ← 更新時は数字を上げる
+const CACHE_VERSION = 'v90';
 const CACHE_NAME = `calculator-cache-${CACHE_VERSION}`;
 
 const URLS_TO_CACHE = [
   './',
   './index.html',
   './manifest.json',
-  './icon-192.png',   // ← iOS が参照するアイコン
+  './icon-192.png',
   './icon-512.png'
 ];
 
@@ -19,7 +19,7 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(URLS_TO_CACHE))
   );
-  self.skipWaiting(); // 新しい SW を即座に有効化
+  self.skipWaiting();
 });
 
 // ===============================
@@ -35,16 +35,7 @@ self.addEventListener('activate', event => {
       )
     )
   );
-  self.clients.claim(); // ページを即座に新 SW の管理下に
-});
-
-// ===============================
-//  更新があったら自動リロード
-// ===============================
-self.addEventListener('controllerchange', () => {
-  self.clients.matchAll().then(clients => {
-    clients.forEach(client => client.navigate(client.url));
-  });
+  self.clients.claim();
 });
 
 // ===============================
@@ -53,16 +44,17 @@ self.addEventListener('controllerchange', () => {
 self.addEventListener('fetch', event => {
   const request = event.request;
 
+  // GETリクエスト以外はスルー
+  if (request.method !== 'GET') return;
+
   event.respondWith(
     caches.match(request).then(cachedResponse => {
       if (cachedResponse) return cachedResponse;
 
       return fetch(request)
         .then(networkResponse => {
-          if (
-            request.method === 'GET' &&
-            request.url.startsWith(self.location.origin)
-          ) {
+          // 同一オリジンのリソースのみキャッシュに追加
+          if (networkResponse.ok && request.url.startsWith(self.location.origin)) {
             caches.open(CACHE_NAME).then(cache => {
               cache.put(request, networkResponse.clone());
             });
@@ -70,7 +62,10 @@ self.addEventListener('fetch', event => {
           return networkResponse;
         })
         .catch(() => {
-          // オフライン時のフォールバック（必要なら追加）
+          // オフライン時：HTMLリクエストならキャッシュのindex.htmlを返す
+          if (request.headers.get('accept')?.includes('text/html')) {
+            return caches.match('./index.html');
+          }
         });
     })
   );
