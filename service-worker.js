@@ -1,72 +1,64 @@
-// ===============================
-//  PWA キャッシュ設定
-// ===============================
-const CACHE_VERSION = 'v90';
+const CACHE_VERSION = "v91";
 const CACHE_NAME = `calculator-cache-${CACHE_VERSION}`;
 
-const URLS_TO_CACHE = [
-  './',
-  './index.html',
-  './manifest.json',
-  './icon-192.png',
-  './icon-512.png'
+const APP_SHELL = [
+  "./",
+  "./index.html",
+  "./manifest.json",
+  "./icon-192.png",
+  "./icon-512.png"
 ];
 
-// ===============================
-//  インストール（新キャッシュ作成）
-// ===============================
-self.addEventListener('install', event => {
+// インストール時にアプリ本体を全部キャッシュ
+self.addEventListener("install", event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(URLS_TO_CACHE))
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(APP_SHELL))
+      .then(() => self.skipWaiting())
   );
-  self.skipWaiting();
 });
 
-// ===============================
-//  有効化（古いキャッシュ削除）
-// ===============================
-self.addEventListener('activate', event => {
+// 新しいSWを即座に有効化
+self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys().then(keys =>
       Promise.all(
         keys
-          .filter(key => key.startsWith('calculator-cache-') && key !== CACHE_NAME)
+          .filter(key =>
+            key.startsWith("calculator-cache-") &&
+            key !== CACHE_NAME
+          )
           .map(key => caches.delete(key))
       )
-    )
+    ).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
-// ===============================
-//  fetch（キャッシュ優先 + ネット更新）
-// ===============================
-self.addEventListener('fetch', event => {
-  const request = event.request;
-
-  // GETリクエスト以外はスルー
-  if (request.method !== 'GET') return;
+// 完全キャッシュ優先
+self.addEventListener("fetch", event => {
+  if (event.request.method !== "GET") return;
 
   event.respondWith(
-    caches.match(request).then(cachedResponse => {
-      if (cachedResponse) return cachedResponse;
+    caches.match(event.request).then(cached => {
+      if (cached) {
+        return cached;
+      }
 
-      return fetch(request)
-        .then(networkResponse => {
-          // 同一オリジンのリソースのみキャッシュに追加
-          if (networkResponse.ok && request.url.startsWith(self.location.origin)) {
-            caches.open(CACHE_NAME).then(cache => {
-              cache.put(request, networkResponse.clone());
-            });
-          }
-          return networkResponse;
-        })
-        .catch(() => {
-          // オフライン時：HTMLリクエストならキャッシュのindex.htmlを返す
-          if (request.headers.get('accept')?.includes('text/html')) {
-            return caches.match('./index.html');
-          }
-        });
+      return fetch(event.request).then(response => {
+        if (
+          response &&
+          response.ok &&
+          event.request.url.startsWith(self.location.origin)
+        ) {
+          const copy = response.clone();
+
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, copy);
+          });
+        }
+
+        return response;
+      });
     })
   );
 });
