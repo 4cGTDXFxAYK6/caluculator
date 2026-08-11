@@ -309,32 +309,81 @@ function handleInput(val) {
 /* -------------------------
    Event Listeners
 --------------------------*/
-document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("keypad").addEventListener("pointerdown", e => {
-    const b = e.target.closest("button");
-    if (b) { e.preventDefault(); handleInput(b.dataset.val); b.blur(); }
-  });
 
-  document.getElementById("totalBox").addEventListener("click", () => {
-    const lines = [];
-    historyEl.querySelectorAll('.history-item[data-type="history"]').forEach(item => {
+document.getElementById("keypad").addEventListener("pointerdown", e => {
+  const b = e.target.closest("button");
+
+  if (b) {
+    e.preventDefault();
+    handleInput(b.dataset.val);
+    b.blur();
+  }
+});
+
+document.getElementById("totalBox").addEventListener("click", () => {
+  const lines = [];
+
+  historyEl
+    .querySelectorAll('.history-item[data-type="history"]')
+    .forEach(item => {
       lines.push(item.querySelector(".text").textContent);
     });
-    if (!lines.length) return;
-    navigator.clipboard.writeText(lines.join("\n") + "\n---\n" + totalText.textContent).then(() => {
-      flash.style.animation = "none"; flash.offsetHeight;
-      flash.style.animation = "flash-animation 0.4s ease-out";
-    });
-  });
 
-  const keyMap = {'0':'0','1':'1','2':'2','3':'3','4':'4','5':'5','6':'6','7':'7','8':'8','9':'9','.':'.','+':'+','-':'-','*':'*','/':'/','%':'%','Enter':'=','=':'=','Backspace':'DEL','Escape':'AC'};
-  window.addEventListener("keydown", e => {
-    if (keyMap[e.key]) { e.preventDefault(); handleInput(keyMap[e.key]); }
-  });
+  if (!lines.length) return;
 
-  loadHistory();
-  renderInput();
+  navigator.clipboard.writeText(
+    lines.join("\n") + "\n---\n" + totalText.textContent
+  ).then(() => {
+    flash.style.animation = "none";
+    flash.offsetHeight;
+    flash.style.animation = "flash-animation 0.4s ease-out";
+  });
 });
+
+const keyMap = {
+  "0": "0",
+  "1": "1",
+  "2": "2",
+  "3": "3",
+  "4": "4",
+  "5": "5",
+  "6": "6",
+  "7": "7",
+  "8": "8",
+  "9": "9",
+  ".": ".",
+  "+": "+",
+  "-": "-",
+  "*": "*",
+  "/": "/",
+  "%": "%",
+  "Enter": "=",
+  "=": "=",
+  "Backspace": "DEL",
+  "Escape": "AC"
+};
+
+window.addEventListener("keydown", e => {
+  if (keyMap[e.key]) {
+    e.preventDefault();
+    handleInput(keyMap[e.key]);
+  }
+});
+
+// 履歴読み込み
+loadHistory();
+
+// 初期表示
+renderInput();
+
+// Service Worker登録
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("./service-worker.js", {
+    scope: "./"
+  }).catch(err => {
+    console.warn("Service Worker registration failed:", err);
+  });
+}
 </script>
 </body>
 </html>
