@@ -1,7 +1,7 @@
 {
   "name": "履歴付き電卓",
   "short_name": "電卓",
-  "start_url": "./index.html",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "background_color": "#000000",
