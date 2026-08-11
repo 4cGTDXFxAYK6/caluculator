@@ -1,9 +1,14 @@
+```html
 <!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="utf-8" />
-<title>履歴付き電卓 (画面回転対応版)</title>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>履歴付き電卓</title>
+
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+>
 
 <link rel="apple-touch-icon" sizes="192x192" href="./icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -19,328 +24,1107 @@
     --btn-accent: #ff9f0a;
     --border: rgba(255,255,255,0.1);
   }
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body { height: 100%; margin: 0; background: var(--bg); font-family: -apple-system, BlinkMacSystemFont, sans-serif; overflow: hidden; }
-  body { display: flex; align-items: center; justify-content: center; }
+
+  * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html,
+  body {
+    height: 100%;
+    margin: 0;
+    background: var(--bg);
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    overflow: hidden;
+  }
+
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 
   .calculator {
-    width: 100%; height: 100vh; height: 100dvh;
-    display: flex; flex-direction: column;
-    padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    padding:
+      env(safe-area-inset-top)
+      env(safe-area-inset-right)
+      0
+      env(safe-area-inset-left);
     background: var(--bg);
   }
 
   .history {
-    background: rgba(255,255,255,0.05); color: #fff;
-    flex: 1; border-radius: 12px;
-    overflow-y: auto; overflow-x: hidden; font-size: 22px;
+    background: rgba(255,255,255,0.05);
+    color: #fff;
+    flex: 1;
+    border-radius: 12px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    font-size: 22px;
     margin: 4px 10px;
-    scrollbar-width: thin; -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+    contain: layout paint;
   }
 
   .history-item {
-    position: relative; background-color: var(--btn-accent);
-    border-bottom: 1px solid rgba(255,255,255,0.05); overflow: hidden;
+    position: relative;
+    background-color: var(--btn-accent);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    overflow: hidden;
   }
 
   .history-content {
-    background-color: #121212; padding: 6px 14px;
-    position: relative; z-index: 2;
+    background-color: #121212;
+    padding: 6px 14px;
+    position: relative;
+    z-index: 2;
     transition: transform 0.2s ease-out;
-    display: flex; align-items: center; min-height: 42px;
+    display: flex;
+    align-items: center;
+    min-height: 42px;
   }
 
-  .text { flex: 1; white-space: nowrap; overflow-x: auto; scrollbar-width: none; pointer-events: none; }
+  .text {
+    flex: 1;
+    white-space: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    pointer-events: none;
+  }
 
   .delete-label {
-    position: absolute; right: 0; top: 0; bottom: 0; width: 80px;
-    display: flex; align-items: center; justify-content: center;
-    color: #000; font-size: 15px; font-weight: bold; z-index: 1;
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #000;
+    font-size: 15px;
+    font-weight: bold;
+    z-index: 1;
   }
 
-  .side-controls { display: flex; flex-direction: column; flex-shrink: 0; }
+  .side-controls {
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
 
   .total-box {
-    background: rgba(255,255,255,0.12); color: #fff; padding: 10px 16px;
-    border-radius: 10px; font-size: 24px; text-align: right;
-    margin: 0 10px 6px 10px; font-weight: 600; cursor: pointer;
-    position: relative; overflow: hidden;
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 24px;
+    text-align: right;
+    margin: 0 10px 6px 10px;
+    font-weight: 600;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
   }
 
-  .copy-flash { position: absolute; inset: 0; background: var(--btn-accent); opacity: 0; pointer-events: none; }
-  @keyframes flash-animation { 0% { opacity: 0.5; } 100% { opacity: 0; } }
+  .copy-flash {
+    position: absolute;
+    inset: 0;
+    background: var(--btn-accent);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  @keyframes flash-animation {
+    0% {
+      opacity: 0.5;
+    }
+
+    100% {
+      opacity: 0;
+    }
+  }
 
   .keys {
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
-    background: var(--border); border: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
     margin: 0 10px env(safe-area-inset-bottom) 10px;
-    border-radius: 12px; overflow: hidden;
+    border-radius: 12px;
+    overflow: hidden;
   }
 
-  button { height: 72px; border: none; font-size: 26px; color: #fff; background: var(--btn-dark); cursor: pointer; outline: none; }
-  button:active { filter: brightness(1.6); }
-  .op, .equal { background: var(--btn-accent); color: #000; font-weight: 600; font-size: 30px; }
-  .gray { background: var(--btn-gray); color: #000; }
-  .zero { grid-column: span 2; text-align: left; padding-left: 35px; }
+  button {
+    height: 72px;
+    border: none;
+    font-size: 26px;
+    color: #fff;
+    background: var(--btn-dark);
+    cursor: pointer;
+    outline: none;
+  }
+
+  button:active {
+    filter: brightness(1.6);
+  }
+
+  .op,
+  .equal {
+    background: var(--btn-accent);
+    color: #000;
+    font-weight: 600;
+    font-size: 30px;
+  }
+
+  .gray {
+    background: var(--btn-gray);
+    color: #000;
+  }
+
+  .zero {
+    grid-column: span 2;
+    text-align: left;
+    padding-left: 35px;
+  }
 
   @media (orientation: landscape) {
-    .calculator { flex-direction: row; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); gap: 10px; }
-    .history { margin: 0; height: 100%; }
-    .side-controls { width: 45%; justify-content: flex-end; }
-    .total-box, .keys { margin: 0 0 5px 0; }
-    .keys { margin-top: 5px; }
-    button { height: 12vh; min-height: 50px; font-size: 22px; }
-    .op, .equal { font-size: 24px; }
+    .calculator {
+      flex-direction: row;
+      padding:
+        env(safe-area-inset-top)
+        env(safe-area-inset-right)
+        env(safe-area-inset-bottom)
+        env(safe-area-inset-left);
+      gap: 10px;
+    }
+
+    .history {
+      margin: 0;
+      height: 100%;
+    }
+
+    .side-controls {
+      width: 45%;
+      justify-content: flex-end;
+    }
+
+    .total-box,
+    .keys {
+      margin: 0 0 5px 0;
+    }
+
+    .keys {
+      margin-top: 5px;
+    }
+
+    button {
+      height: 12vh;
+      min-height: 50px;
+      font-size: 22px;
+    }
+
+    .op,
+    .equal {
+      font-size: 24px;
+    }
   }
 
   @media (orientation: portrait) and (min-height: 850px) {
-    button { height: 85px; font-size: 32px; }
+    button {
+      height: 85px;
+      font-size: 32px;
+    }
   }
 </style>
 </head>
+
 <body>
 
 <div class="calculator">
+
   <div id="history" class="history"></div>
+
   <div class="side-controls">
+
     <div id="totalBox" class="total-box">
       <div id="flash" class="copy-flash"></div>
       <span id="totalText">合計: 0</span>
     </div>
+
     <div class="keys" id="keypad">
+
       <button class="gray" data-val="DEL">⌫</button>
       <button class="gray" data-val="AC">AC</button>
       <button class="gray" data-val="%">%</button>
       <button class="op" data-val="/">÷</button>
-      <button data-val="7">7</button><button data-val="8">8</button><button data-val="9">9</button>
+
+      <button data-val="7">7</button>
+      <button data-val="8">8</button>
+      <button data-val="9">9</button>
       <button class="op" data-val="*">×</button>
-      <button data-val="4">4</button><button data-val="5">5</button><button data-val="6">6</button>
+
+      <button data-val="4">4</button>
+      <button data-val="5">5</button>
+      <button data-val="6">6</button>
       <button class="op" data-val="-">−</button>
-      <button data-val="1">1</button><button data-val="2">2</button><button data-val="3">3</button>
+
+      <button data-val="1">1</button>
+      <button data-val="2">2</button>
+      <button data-val="3">3</button>
       <button class="op" data-val="+">＋</button>
+
       <button class="zero" data-val="0">0</button>
       <button data-val=".">.</button>
       <button class="equal" data-val="=">=</button>
+
     </div>
   </div>
 </div>
 
 <script>
-const OPS = new Set(["+","-","*","/"]);
 
-/* -------------------------
+/* =========================================================
+   Calculator
+========================================================= */
+
+const OPS = new Set(["+", "-", "*", "/"]);
+
+
+/* =========================================================
    State
---------------------------*/
+========================================================= */
+
 const state = {
-  formula: [], current: "", isCalculated: false,
-  reset() { this.formula = []; this.current = ""; this.isCalculated = false; },
+  formula: [],
+  current: "",
+  isCalculated: false,
+
+  reset() {
+    this.formula = [];
+    this.current = "";
+    this.isCalculated = false;
+  },
+
   execute() {
+
     const tokens = [...this.formula];
-    if (this.current !== "" && this.current !== "-") tokens.push(this.current);
-    while (tokens.length && OPS.has(tokens[tokens.length - 1])) tokens.pop();
-    if (!tokens.length) return 0;
-    let res = parseFloat(tokens[0]);
-    for (let i = 1; i < tokens.length; i += 2) {
-      const op = tokens[i], v = parseFloat(tokens[i + 1]);
-      if (isNaN(v)) continue;
-      if (op === '+') res += v;
-      else if (op === '-') res -= v;
-      else if (op === '*') res *= v;
-      else if (op === '/') res = v ? res / v : 0;
+
+    if (this.current !== "" && this.current !== "-") {
+      tokens.push(this.current);
     }
+
+    while (
+      tokens.length &&
+      OPS.has(tokens[tokens.length - 1])
+    ) {
+      tokens.pop();
+    }
+
+    if (!tokens.length) {
+      return 0;
+    }
+
+    let res = parseFloat(tokens[0]);
+
+    for (let i = 1; i < tokens.length; i += 2) {
+
+      const op = tokens[i];
+      const v = parseFloat(tokens[i + 1]);
+
+      if (isNaN(v)) {
+        continue;
+      }
+
+      if (op === "+") {
+        res += v;
+      }
+      else if (op === "-") {
+        res -= v;
+      }
+      else if (op === "*") {
+        res *= v;
+      }
+      else if (op === "/") {
+        res = v ? res / v : 0;
+      }
+    }
+
     return parseFloat(res.toPrecision(12));
   }
 };
 
-/* -------------------------
+
+/* =========================================================
    UI
---------------------------*/
+========================================================= */
+
 const historyEl = document.getElementById("history");
 const totalText = document.getElementById("totalText");
-const flash     = document.getElementById("flash");
+const flash = document.getElementById("flash");
+
+
+/* =========================================================
+   履歴データ
+   DOMとは別にメモリで管理する
+========================================================= */
+
+let historyData = [];
+
+
+/* =========================================================
+   Format
+========================================================= */
 
 function format(n) {
-  if (n === "-" || n === "" || n == null) return n;
+
+  if (n === "-" || n === "" || n == null) {
+    return n;
+  }
+
   const s = String(n);
-  if (s.includes("e")) return s;
+
+  if (s.includes("e")) {
+    return s;
+  }
+
   const [int, dec] = s.split(".");
-  return (dec !== undefined ? Number(int).toLocaleString("ja-JP") + "." + dec : Number(int).toLocaleString("ja-JP"));
+
+  if (dec !== undefined) {
+    return Number(int).toLocaleString("ja-JP") + "." + dec;
+  }
+
+  return Number(int).toLocaleString("ja-JP");
 }
 
-function toSymbol(s) { return s.replace(/\*/g, "×").replace(/\//g, "÷"); }
+
+function toSymbol(s) {
+  return s
+    .replace(/\*/g, "×")
+    .replace(/\//g, "÷");
+}
+
 
 function exprString() {
-  return state.formula.map(t => OPS.has(t) ? toSymbol(t) : format(t)).join("") + format(state.current);
+
+  return state.formula
+    .map(t =>
+      OPS.has(t)
+        ? toSymbol(t)
+        : format(t)
+    )
+    .join("")
+    + format(state.current);
 }
+
+
+/* =========================================================
+   合計値
+   DOMを検索せず、historyDataから計算
+========================================================= */
+
+function calculateTotal() {
+
+  let sum = 0;
+
+  for (const text of historyData) {
+
+    const equalIndex = text.lastIndexOf("=");
+
+    const value =
+      equalIndex >= 0
+        ? text.slice(equalIndex + 1)
+        : text;
+
+    sum +=
+      parseFloat(
+        value.replace(/,/g, "")
+      ) || 0;
+  }
+
+  return parseFloat(
+    sum.toPrecision(12)
+  );
+}
+
 
 function updateTotal() {
-  let sum = 0;
-  historyEl.querySelectorAll('.history-item[data-type="history"]').forEach(item => {
-    const parts = item.querySelector(".text").textContent.split("=");
-    sum += parseFloat((parts[1] ?? parts[0]).replace(/,/g, "")) || 0;
-  });
-  totalText.textContent = "合計: " + format(parseFloat(sum.toPrecision(12)));
+
+  const total = calculateTotal();
+
+  totalText.textContent =
+    "合計: " + format(total);
 }
+
+
+/* =========================================================
+   Scroll
+========================================================= */
 
 function scrollBottom() {
-  requestAnimationFrame(() => { historyEl.scrollTop = historyEl.scrollHeight; });
+
+  historyEl.scrollTop =
+    historyEl.scrollHeight;
 }
 
-/* -------------------------
-   スワイプ：グローバル委譲で一元管理
---------------------------*/
-let drag = null; // { el, content, startX, currentX, isOpen }
 
-historyEl.addEventListener("touchstart", e => {
-  const item = e.target.closest('.history-item[data-type="history"]');
-  if (!item) return;
-  drag = { el: item, content: item.querySelector(".history-content"), startX: e.touches[0].pageX, currentX: 0, isOpen: false };
-  drag.content.style.transition = "none";
-}, { passive: true });
+/* =========================================================
+   履歴DOM生成
+========================================================= */
 
-historyEl.addEventListener("touchmove", e => {
-  if (!drag) return;
-  let diff = e.touches[0].pageX - drag.startX - (drag.isOpen ? 80 : 0);
-  diff = Math.min(0, Math.max(-120, diff));
-  drag.currentX = diff;
-  drag.content.style.transform = `translateX(${diff}px)`;
-}, { passive: true });
-
-historyEl.addEventListener("touchend", () => {
-  if (!drag) return;
-  drag.content.style.transition = "transform 0.2s ease-out";
-  if (drag.currentX < -40) { drag.content.style.transform = "translateX(-80px)"; drag.isOpen = true; }
-  else { drag.content.style.transform = "translateX(0)"; drag.isOpen = false; }
-  drag = null;
-});
-
-// 削除ラベルのクリックも委譲
-historyEl.addEventListener("click", e => {
-  const label = e.target.closest(".delete-label");
-  if (!label) return;
-  label.closest(".history-item").remove();
-  updateTotal();
-  saveHistory();
-});
-
-/* -------------------------
-   履歴アイテム生成
---------------------------*/
 function createItem(text, isFinal) {
-  const item = document.createElement("div");
-  item.className = "history-item";
-  item.dataset.type = isFinal ? "history" : "input";
-  item.innerHTML = `<div class="delete-label">削除</div><div class="history-content"><span class="text">${text}</span></div>`;
+
+  const item =
+    document.createElement("div");
+
+  item.className =
+    "history-item";
+
+  item.dataset.type =
+    isFinal ? "history" : "input";
+
+  const deleteLabel =
+    document.createElement("div");
+
+  deleteLabel.className =
+    "delete-label";
+
+  deleteLabel.textContent =
+    "削除";
+
+  const content =
+    document.createElement("div");
+
+  content.className =
+    "history-content";
+
+  const textEl =
+    document.createElement("span");
+
+  textEl.className =
+    "text";
+
+  textEl.textContent =
+    text;
+
+  content.appendChild(textEl);
+
+  item.appendChild(deleteLabel);
+  item.appendChild(content);
+
   historyEl.appendChild(item);
+
   return item;
 }
 
+
+/* =========================================================
+   入力表示
+========================================================= */
+
 function renderInput() {
-  let item = historyEl.lastElementChild;
-  if (!item || item.dataset.type !== "input") item = createItem("", false);
-  item.querySelector(".text").textContent = exprString() || "0";
+
+  let item =
+    historyEl.lastElementChild;
+
+  if (
+    !item ||
+    item.dataset.type !== "input"
+  ) {
+    item =
+      createItem("", false);
+  }
+
+  const textEl =
+    item.querySelector(".text");
+
+  textEl.textContent =
+    exprString() || "0";
+
   scrollBottom();
 }
+
+
+/* =========================================================
+   計算確定
+========================================================= */
 
 function finalize(expr, res, omitEqual) {
-  const item = historyEl.lastElementChild;
-  if (!item) return;
-  item.dataset.type = "history";
-  item.querySelector(".text").textContent = omitEqual ? format(res) : `${expr}=${format(res)}`;
+
+  const item =
+    historyEl.lastElementChild;
+
+  if (!item) {
+    return;
+  }
+
+  item.dataset.type =
+    "history";
+
+  const resultText =
+    omitEqual
+      ? format(res)
+      : `${expr}=${format(res)}`;
+
+  item.querySelector(".text").textContent =
+    resultText;
+
+  historyData.push(resultText);
+
   updateTotal();
+
   scrollBottom();
 }
 
-/* -------------------------
-   Storage
---------------------------*/
+
+/* =========================================================
+   保存
+========================================================= */
+
 function saveHistory() {
-  const lines = [];
-  historyEl.querySelectorAll('.history-item[data-type="history"]').forEach(item => {
-    lines.push(item.querySelector(".text").textContent);
-  });
-  localStorage.setItem("calcHistory", JSON.stringify(lines));
+
+  try {
+
+    localStorage.setItem(
+      "calcHistory",
+      JSON.stringify(historyData)
+    );
+
+  } catch (error) {
+
+    console.warn(
+      "履歴保存に失敗しました",
+      error
+    );
+  }
 }
+
+
+/* =========================================================
+   起動時履歴読み込み
+========================================================= */
 
 function loadHistory() {
+
   try {
-    JSON.parse(localStorage.getItem("calcHistory") || "[]").forEach(text => createItem(text, true));
+
+    const saved =
+      JSON.parse(
+        localStorage.getItem("calcHistory") || "[]"
+      );
+
+    if (!Array.isArray(saved)) {
+      return;
+    }
+
+    historyData = saved.filter(
+      item => typeof item === "string"
+    );
+
+    if (!historyData.length) {
+      return;
+    }
+
+    /*
+      DocumentFragmentを使って、
+      DOMへの追加を1回にまとめる
+    */
+
+    const fragment =
+      document.createDocumentFragment();
+
+    for (const text of historyData) {
+
+      const item =
+        document.createElement("div");
+
+      item.className =
+        "history-item";
+
+      item.dataset.type =
+        "history";
+
+      const deleteLabel =
+        document.createElement("div");
+
+      deleteLabel.className =
+        "delete-label";
+
+      deleteLabel.textContent =
+        "削除";
+
+      const content =
+        document.createElement("div");
+
+      content.className =
+        "history-content";
+
+      const textEl =
+        document.createElement("span");
+
+      textEl.className =
+        "text";
+
+      textEl.textContent =
+        text;
+
+      content.appendChild(textEl);
+
+      item.appendChild(deleteLabel);
+      item.appendChild(content);
+
+      fragment.appendChild(item);
+    }
+
+    historyEl.appendChild(fragment);
+
     updateTotal();
-  } catch { localStorage.removeItem("calcHistory"); }
+
+  } catch (error) {
+
+    console.warn(
+      "履歴読み込みに失敗しました",
+      error
+    );
+
+    historyData = [];
+
+    localStorage.removeItem(
+      "calcHistory"
+    );
+  }
 }
 
-/* -------------------------
-   Input Handler
---------------------------*/
+
+/* =========================================================
+   入力処理
+========================================================= */
+
 function handleInput(val) {
-  if (state.isCalculated && !isNaN(val)) state.reset();
+
+  /*
+    計算後に数字を押したら新しい計算
+  */
+
+  if (
+    state.isCalculated &&
+    !isNaN(val)
+  ) {
+    state.reset();
+  }
+
   state.isCalculated = false;
 
+
+  /* AC */
+
   if (val === "AC") {
-    state.reset(); historyEl.innerHTML = ""; updateTotal(); saveHistory();
-  } else if (val === "DEL") {
-    if (state.current) state.current = state.current.slice(0, -1);
-    else if (state.formula.length) { state.formula.pop(); state.current = state.formula.pop() || ""; }
-  } else if (val === "%") {
-    if (state.current && state.current !== "-") state.current = String(parseFloat(state.current) / 100);
-  } else if (val === "=") {
-    if (!state.current && !state.formula.length) return;
-    while (state.formula.length && !state.current && OPS.has(state.formula[state.formula.length - 1])) state.formula.pop();
-    const res = state.execute();
-    const expr = exprString();
-    const hasOp = state.formula.some(t => OPS.has(t));
-    finalize(expr, res, !hasOp);
-    saveHistory(); state.reset(); state.isCalculated = true;
-  } else if (OPS.has(val)) {
-    if (val === "-" && !state.current && !state.formula.length) {
-      state.current = "-";
-    } else if (state.current && state.current !== "-") {
-      state.formula.push(state.current, val); state.current = "";
-    } else if (state.formula.length) {
-      state.formula[state.formula.length - 1] = val;
+
+    state.reset();
+
+    historyData = [];
+
+    historyEl.innerHTML = "";
+
+    updateTotal();
+
+    saveHistory();
+
+  }
+
+
+  /* DEL */
+
+  else if (val === "DEL") {
+
+    if (state.current) {
+
+      state.current =
+        state.current.slice(0, -1);
+
     }
-  } else {
-    if (val === "." && state.current.includes(".")) return;
+
+    else if (state.formula.length) {
+
+      state.formula.pop();
+
+      state.current =
+        state.formula.pop() || "";
+    }
+  }
+
+
+  /* % */
+
+  else if (val === "%") {
+
+    if (
+      state.current &&
+      state.current !== "-"
+    ) {
+
+      state.current =
+        String(
+          parseFloat(state.current) / 100
+        );
+    }
+  }
+
+
+  /* = */
+
+  else if (val === "=") {
+
+    if (
+      !state.current &&
+      !state.formula.length
+    ) {
+      return;
+    }
+
+    while (
+      state.formula.length &&
+      !state.current &&
+      OPS.has(
+        state.formula[
+          state.formula.length - 1
+        ]
+      )
+    ) {
+
+      state.formula.pop();
+    }
+
+    const res =
+      state.execute();
+
+    const expr =
+      exprString();
+
+    const hasOp =
+      state.formula.some(
+        t => OPS.has(t)
+      );
+
+    finalize(
+      expr,
+      res,
+      !hasOp
+    );
+
+    saveHistory();
+
+    state.reset();
+
+    state.isCalculated =
+      true;
+
+    /*
+      計算確定後は、
+      次の入力欄をまだ作らない。
+      
+      次に数字を押したときに
+      renderInput() が作る。
+    */
+    return;
+  }
+
+
+  /* 演算子 */
+
+  else if (OPS.has(val)) {
+
+    if (
+      val === "-" &&
+      !state.current &&
+      !state.formula.length
+    ) {
+
+      state.current = "-";
+
+    }
+
+    else if (
+      state.current &&
+      state.current !== "-"
+    ) {
+
+      state.formula.push(
+        state.current,
+        val
+      );
+
+      state.current = "";
+
+    }
+
+    else if (state.formula.length) {
+
+      state.formula[
+        state.formula.length - 1
+      ] = val;
+    }
+  }
+
+
+  /* 数字・小数点 */
+
+  else {
+
+    if (
+      val === "." &&
+      state.current.includes(".")
+    ) {
+      return;
+    }
+
     state.current += val;
   }
+
+
   renderInput();
 }
 
-/* -------------------------
-   Event Listeners
---------------------------*/
 
-document.getElementById("keypad").addEventListener("pointerdown", e => {
-  const b = e.target.closest("button");
+/* =========================================================
+   スワイプ削除
+========================================================= */
 
-  if (b) {
-    e.preventDefault();
-    handleInput(b.dataset.val);
-    b.blur();
+let drag = null;
+
+
+historyEl.addEventListener(
+  "touchstart",
+  e => {
+
+    const item =
+      e.target.closest(
+        '.history-item[data-type="history"]'
+      );
+
+    if (!item) {
+      return;
+    }
+
+    drag = {
+      el: item,
+      content:
+        item.querySelector(
+          ".history-content"
+        ),
+      startX:
+        e.touches[0].pageX,
+      currentX: 0,
+      isOpen: false
+    };
+
+    drag.content.style.transition =
+      "none";
+
+  },
+  { passive: true }
+);
+
+
+historyEl.addEventListener(
+  "touchmove",
+  e => {
+
+    if (!drag) {
+      return;
+    }
+
+    let diff =
+      e.touches[0].pageX -
+      drag.startX -
+      (drag.isOpen ? 80 : 0);
+
+    diff =
+      Math.min(
+        0,
+        Math.max(-120, diff)
+      );
+
+    drag.currentX =
+      diff;
+
+    drag.content.style.transform =
+      `translateX(${diff}px)`;
+
+  },
+  { passive: true }
+);
+
+
+historyEl.addEventListener(
+  "touchend",
+  () => {
+
+    if (!drag) {
+      return;
+    }
+
+    drag.content.style.transition =
+      "transform 0.2s ease-out";
+
+    if (drag.currentX < -40) {
+
+      drag.content.style.transform =
+        "translateX(-80px)";
+
+      drag.isOpen = true;
+
+    } else {
+
+      drag.content.style.transform =
+        "translateX(0)";
+
+      drag.isOpen = false;
+    }
+
+    drag = null;
   }
-});
+);
 
-document.getElementById("totalBox").addEventListener("click", () => {
-  const lines = [];
 
-  historyEl
-    .querySelectorAll('.history-item[data-type="history"]')
-    .forEach(item => {
-      lines.push(item.querySelector(".text").textContent);
-    });
+/* =========================================================
+   履歴削除
+========================================================= */
 
-  if (!lines.length) return;
+historyEl.addEventListener(
+  "click",
+  e => {
 
-  navigator.clipboard.writeText(
-    lines.join("\n") + "\n---\n" + totalText.textContent
-  ).then(() => {
-    flash.style.animation = "none";
-    flash.offsetHeight;
-    flash.style.animation = "flash-animation 0.4s ease-out";
-  });
-});
+    const label =
+      e.target.closest(
+        ".delete-label"
+      );
+
+    if (!label) {
+      return;
+    }
+
+    const item =
+      label.closest(
+        ".history-item"
+      );
+
+    if (!item) {
+      return;
+    }
+
+    const text =
+      item.querySelector(
+        ".text"
+      ).textContent;
+
+    /*
+      メモリ上の履歴から削除
+    */
+
+    const index =
+      historyData.indexOf(text);
+
+    if (index !== -1) {
+      historyData.splice(index, 1);
+    }
+
+    item.remove();
+
+    updateTotal();
+
+    saveHistory();
+  }
+);
+
+
+/* =========================================================
+   キーパッド
+========================================================= */
+
+document
+  .getElementById("keypad")
+  .addEventListener(
+    "pointerdown",
+    e => {
+
+      const button =
+        e.target.closest("button");
+
+      if (!button) {
+        return;
+      }
+
+      e.preventDefault();
+
+      handleInput(
+        button.dataset.val
+      );
+
+      button.blur();
+    }
+  );
+
+
+/* =========================================================
+   合計コピー
+========================================================= */
+
+document
+  .getElementById("totalBox")
+  .addEventListener(
+    "click",
+    () => {
+
+      if (!historyData.length) {
+        return;
+      }
+
+      const text =
+        historyData.join("\n") +
+        "\n---\n" +
+        totalText.textContent;
+
+      if (
+        navigator.clipboard &&
+        navigator.clipboard.writeText
+      ) {
+
+        navigator.clipboard
+          .writeText(text)
+          .then(() => {
+
+            flash.style.animation =
+              "none";
+
+            /*
+              reflow
+            */
+            void flash.offsetHeight;
+
+            flash.style.animation =
+              "flash-animation 0.4s ease-out";
+          })
+          .catch(() => {});
+      }
+    }
+  );
+
+
+/* =========================================================
+   キーボード
+========================================================= */
 
 const keyMap = {
+
   "0": "0",
   "1": "1",
   "2": "2",
@@ -351,39 +1135,91 @@ const keyMap = {
   "7": "7",
   "8": "8",
   "9": "9",
+
   ".": ".",
+
   "+": "+",
   "-": "-",
   "*": "*",
   "/": "/",
+
   "%": "%",
+
   "Enter": "=",
   "=": "=",
+
   "Backspace": "DEL",
   "Escape": "AC"
 };
 
-window.addEventListener("keydown", e => {
-  if (keyMap[e.key]) {
+
+window.addEventListener(
+  "keydown",
+  e => {
+
+    const value =
+      keyMap[e.key];
+
+    if (!value) {
+      return;
+    }
+
     e.preventDefault();
-    handleInput(keyMap[e.key]);
+
+    handleInput(value);
   }
-});
+);
 
-// 履歴読み込み
-loadHistory();
 
-// 初期表示
+/* =========================================================
+   起動処理
+========================================================= */
+
+/*
+  まず電卓UIを表示する。
+  その後で履歴を読み込む。
+*/
+
 renderInput();
 
-// Service Worker登録
+
+/*
+  履歴読み込みは、
+  電卓UIの初期表示を邪魔しないよう
+  ブラウザに処理を返してから実行する。
+*/
+
+setTimeout(() => {
+  loadHistory();
+  scrollBottom();
+}, 0);
+
+
+/* =========================================================
+   Service Worker
+========================================================= */
+
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("./service-worker.js", {
-    scope: "./"
-  }).catch(err => {
-    console.warn("Service Worker registration failed:", err);
-  });
+
+  navigator.serviceWorker
+    .register(
+      "./service-worker.js",
+      {
+        scope: "./"
+      }
+    )
+    .catch(error => {
+
+      console.warn(
+        "Service Worker registration failed:",
+        error
+      );
+
+    });
 }
+
 </script>
+
 </body>
 </html>
+```
