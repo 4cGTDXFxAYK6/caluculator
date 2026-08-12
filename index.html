@@ -1,1986 +1,332 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="utf-8" />
-
+<meta charset="utf-8">
 <title>履歴付き電卓</title>
-
-<meta
-  name="viewport"
-  content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
->
-
-<!-- iPhone ホーム画面用アイコン -->
-<link
-  rel="apple-touch-icon"
-  sizes="180x180"
-  href="./icon-180.png"
->
-
-<link
-  rel="apple-touch-icon"
-  sizes="192x192"
-  href="./icon-192.png"
->
-
-<meta
-  name="apple-mobile-web-app-capable"
-  content="yes"
->
-
-<meta
-  name="apple-mobile-web-app-status-bar-style"
-  content="black"
->
-
-<link
-  rel="manifest"
-  href="./manifest.json"
->
-
-<meta
-  name="theme-color"
-  content="#000000"
->
-
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<link rel="apple-touch-icon" sizes="180x180" href="./icon-180.png">
+<link rel="apple-touch-icon" sizes="192x192" href="./icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#000000">
 
 <style>
-
-:root {
-  --bg: #000;
-  --btn-dark: #2c2c2e;
-  --btn-gray: #a5a5a5;
-  --btn-accent: #ff9f0a;
-  --border: rgba(255,255,255,0.1);
+:root{--bg:#000;--btn-dark:#2c2c2e;--btn-gray:#a5a5a5;--btn-accent:#ff9f0a;--border:rgba(255,255,255,.1)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,sans-serif;overflow:hidden}
+body{display:flex;align-items:center;justify-content:center}
+.calculator{width:100%;height:100vh;height:100dvh;display:flex;flex-direction:column;padding:env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);background:var(--bg)}
+.history{background:rgba(255,255,255,.05);color:#fff;flex:1;border-radius:12px;overflow-y:auto;overflow-x:hidden;font-size:22px;margin:4px 10px;scrollbar-width:thin;-webkit-overflow-scrolling:touch;contain:layout paint}
+.history-item{position:relative;background:var(--btn-accent);border-bottom:1px solid rgba(255,255,255,.05);overflow:hidden}
+.history-content{background:#121212;padding:6px 14px;position:relative;z-index:2;transition:transform .2s ease-out;display:flex;align-items:center;min-height:42px}
+.text{flex:1;white-space:nowrap;overflow-x:auto;scrollbar-width:none;pointer-events:none}
+.delete-label{position:absolute;right:0;top:0;bottom:0;width:80px;display:flex;align-items:center;justify-content:center;color:#000;font-size:15px;font-weight:bold;z-index:1}
+.side-controls{display:flex;flex-direction:column;flex-shrink:0}
+.total-box{background:rgba(255,255,255,.12);color:#fff;padding:10px 16px;border-radius:10px;font-size:24px;text-align:right;margin:0 10px 6px;font-weight:600;cursor:pointer;position:relative;overflow:hidden}
+.copy-flash{position:absolute;inset:0;background:var(--btn-accent);opacity:0;pointer-events:none}
+@keyframes flash-animation{0%{opacity:.5}100%{opacity:0}}
+.keys{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);margin:0 10px env(safe-area-inset-bottom);border-radius:12px;overflow:hidden}
+button{height:72px;border:0;font-size:26px;color:#fff;background:var(--btn-dark);cursor:pointer;outline:0;touch-action:manipulation}
+button:active{filter:brightness(1.6)}
+.op,.equal{background:var(--btn-accent);color:#000;font-weight:600;font-size:30px}
+.gray{background:var(--btn-gray);color:#000}
+.zero{grid-column:span 2;text-align:left;padding-left:35px}
+@media (orientation:landscape){
+ .calculator{flex-direction:row;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);gap:10px}
+ .history{margin:0;height:100%;flex:1 1 55%}
+ .side-controls{width:45%;flex-shrink:0;justify-content:flex-end}
+ .total-box,.keys{margin:0 0 5px}
+ .keys{margin-top:5px}
+ button{height:12vh;min-height:50px;font-size:22px}
+ .op,.equal{font-size:24px}
 }
-
-* {
-  box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent;
-}
-
-html,
-body {
-  height: 100%;
-  margin: 0;
-  background: var(--bg);
-  font-family:
-    -apple-system,
-    BlinkMacSystemFont,
-    sans-serif;
-  overflow: hidden;
-}
-
-body {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.calculator {
-
-  width: 100%;
-  height: 100vh;
-  height: 100dvh;
-
-  display: flex;
-  flex-direction: column;
-
-  padding:
-    env(safe-area-inset-top)
-    env(safe-area-inset-right)
-    0
-    env(safe-area-inset-left);
-
-  background: var(--bg);
-}
-
-
-/* =========================================================
-   履歴
-========================================================= */
-
-.history {
-
-  background:
-    rgba(255,255,255,0.05);
-
-  color: #fff;
-
-  flex: 1;
-
-  border-radius: 12px;
-
-  overflow-y: auto;
-  overflow-x: hidden;
-
-  font-size: 22px;
-
-  margin: 4px 10px;
-
-  scrollbar-width: thin;
-
-  -webkit-overflow-scrolling: touch;
-
-  /*
-    履歴部分のレイアウト計算を
-    電卓本体から分離
-  */
-  contain: layout paint;
-}
-
-
-.history-item {
-
-  position: relative;
-
-  background-color:
-    var(--btn-accent);
-
-  border-bottom:
-    1px solid rgba(255,255,255,0.05);
-
-  overflow: hidden;
-}
-
-
-.history-content {
-
-  background-color: #121212;
-
-  padding: 6px 14px;
-
-  position: relative;
-
-  z-index: 2;
-
-  transition:
-    transform 0.2s ease-out;
-
-  display: flex;
-
-  align-items: center;
-
-  min-height: 42px;
-}
-
-
-.text {
-
-  flex: 1;
-
-  white-space: nowrap;
-
-  overflow-x: auto;
-
-  scrollbar-width: none;
-
-  pointer-events: none;
-}
-
-
-.delete-label {
-
-  position: absolute;
-
-  right: 0;
-  top: 0;
-  bottom: 0;
-
-  width: 80px;
-
-  display: flex;
-
-  align-items: center;
-  justify-content: center;
-
-  color: #000;
-
-  font-size: 15px;
-
-  font-weight: bold;
-
-  z-index: 1;
-}
-
-
-/* =========================================================
-   電卓側
-========================================================= */
-
-.side-controls {
-
-  display: flex;
-
-  flex-direction: column;
-
-  flex-shrink: 0;
-}
-
-
-.total-box {
-
-  background:
-    rgba(255,255,255,0.12);
-
-  color: #fff;
-
-  padding: 10px 16px;
-
-  border-radius: 10px;
-
-  font-size: 24px;
-
-  text-align: right;
-
-  margin: 0 10px 6px 10px;
-
-  font-weight: 600;
-
-  cursor: pointer;
-
-  position: relative;
-
-  overflow: hidden;
-}
-
-
-.copy-flash {
-
-  position: absolute;
-
-  inset: 0;
-
-  background:
-    var(--btn-accent);
-
-  opacity: 0;
-
-  pointer-events: none;
-}
-
-
-@keyframes flash-animation {
-
-  0% {
-    opacity: 0.5;
-  }
-
-  100% {
-    opacity: 0;
-  }
-
-}
-
-
-/* =========================================================
-   キーパッド
-========================================================= */
-
-.keys {
-
-  display: grid;
-
-  grid-template-columns:
-    repeat(4, 1fr);
-
-  gap: 1px;
-
-  background:
-    var(--border);
-
-  border:
-    1px solid var(--border);
-
-  margin:
-    0
-    10px
-    env(safe-area-inset-bottom)
-    10px;
-
-  border-radius: 12px;
-
-  overflow: hidden;
-}
-
-
-button {
-
-  height: 72px;
-
-  border: none;
-
-  font-size: 26px;
-
-  color: #fff;
-
-  background:
-    var(--btn-dark);
-
-  cursor: pointer;
-
-  outline: none;
-
-  touch-action: manipulation;
-}
-
-
-button:active {
-
-  filter:
-    brightness(1.6);
-
-}
-
-
-.op,
-.equal {
-
-  background:
-    var(--btn-accent);
-
-  color: #000;
-
-  font-weight: 600;
-
-  font-size: 30px;
-}
-
-
-.gray {
-
-  background:
-    var(--btn-gray);
-
-  color: #000;
-}
-
-
-.zero {
-
-  grid-column: span 2;
-
-  text-align: left;
-
-  padding-left: 35px;
-}
-
-
-/* =========================================================
-   横向き
-   元の左右レイアウトを維持
-========================================================= */
-
-@media (orientation: landscape) {
-
-  .calculator {
-
-    flex-direction: row;
-
-    padding:
-      env(safe-area-inset-top)
-      env(safe-area-inset-right)
-      env(safe-area-inset-bottom)
-      env(safe-area-inset-left);
-
-    gap: 10px;
-  }
-
-
-  .history {
-
-    margin: 0;
-
-    height: 100%;
-
-    /*
-      元の左右バランス
-    */
-    flex: 1 1 55%;
-  }
-
-
-  .side-controls {
-
-    /*
-      元の45%幅を維持
-    */
-    width: 45%;
-
-    flex-shrink: 0;
-
-    justify-content: flex-end;
-  }
-
-
-  .total-box,
-  .keys {
-
-    margin:
-      0 0 5px 0;
-  }
-
-
-  .keys {
-
-    margin-top: 5px;
-  }
-
-
-  button {
-
-    height: 12vh;
-
-    min-height: 50px;
-
-    font-size: 22px;
-  }
-
-
-  .op,
-  .equal {
-
-    font-size: 24px;
-  }
-
-}
-
-
-/* =========================================================
-   縦向き
-========================================================= */
-
-@media (orientation: portrait)
-and (min-height: 850px) {
-
-  button {
-
-    height: 85px;
-
-    font-size: 32px;
-  }
-
-}
-
+@media (orientation:portrait) and (min-height:850px){button{height:85px;font-size:32px}}
 </style>
 </head>
-
-
 <body>
-
-
 <div class="calculator">
-
-
-  <!-- =========================
-       履歴
-  ========================== -->
-
-  <div
-    id="history"
-    class="history"
-  ></div>
-
-
-  <!-- =========================
-       電卓側
-  ========================== -->
-
+  <div id="history" class="history"></div>
   <div class="side-controls">
-
-
-    <div
-      id="totalBox"
-      class="total-box"
-    >
-
-      <div
-        id="flash"
-        class="copy-flash"
-      ></div>
-
-      <span id="totalText">
-        合計: 0
-      </span>
-
+    <div id="totalBox" class="total-box"><div id="flash" class="copy-flash"></div><span id="totalText">合計: 0</span></div>
+    <div class="keys" id="keypad">
+      <button class="gray" data-val="DEL">⌫</button><button class="gray" data-val="AC">AC</button><button class="gray" data-val="%">%</button><button class="op" data-val="/">÷</button>
+      <button data-val="7">7</button><button data-val="8">8</button><button data-val="9">9</button><button class="op" data-val="*">×</button>
+      <button data-val="4">4</button><button data-val="5">5</button><button data-val="6">6</button><button class="op" data-val="-">−</button>
+      <button data-val="1">1</button><button data-val="2">2</button><button data-val="3">3</button><button class="op" data-val="+">＋</button>
+      <button class="zero" data-val="0">0</button><button data-val=".">.</button><button class="equal" data-val="=">=</button>
     </div>
-
-
-    <div
-      class="keys"
-      id="keypad"
-    >
-
-
-      <button
-        class="gray"
-        data-val="DEL"
-      >
-        ⌫
-      </button>
-
-
-      <button
-        class="gray"
-        data-val="AC"
-      >
-        AC
-      </button>
-
-
-      <button
-        class="gray"
-        data-val="%"
-      >
-        %
-      </button>
-
-
-      <button
-        class="op"
-        data-val="/"
-      >
-        ÷
-      </button>
-
-
-      <button data-val="7">
-        7
-      </button>
-
-      <button data-val="8">
-        8
-      </button>
-
-      <button data-val="9">
-        9
-      </button>
-
-      <button
-        class="op"
-        data-val="*"
-      >
-        ×
-      </button>
-
-
-      <button data-val="4">
-        4
-      </button>
-
-      <button data-val="5">
-        5
-      </button>
-
-      <button data-val="6">
-        6
-      </button>
-
-      <button
-        class="op"
-        data-val="-"
-      >
-        −
-      </button>
-
-
-      <button data-val="1">
-        1
-      </button>
-
-      <button data-val="2">
-        2
-      </button>
-
-      <button data-val="3">
-        3
-      </button>
-
-      <button
-        class="op"
-        data-val="+"
-      >
-        ＋
-      </button>
-
-
-      <button
-        class="zero"
-        data-val="0"
-      >
-        0
-      </button>
-
-
-      <button data-val=".">
-        .
-      </button>
-
-
-      <button
-        class="equal"
-        data-val="="
-      >
-        =
-      </button>
-
-
-    </div>
-
   </div>
-
 </div>
 
-
 <script>
+"use strict";
 
-/* =========================================================
-   Calculator
-========================================================= */
+const OPS=new Set(["+","-","*","/"]);
+const STORAGE_KEY="calcHistory";
 
-const OPS =
-  new Set([
-    "+",
-    "-",
-    "*",
-    "/"
-  ]);
+const historyEl=document.getElementById("history");
+const totalText=document.getElementById("totalText");
+const flash=document.getElementById("flash");
+const keypad=document.getElementById("keypad");
+const totalBox=document.getElementById("totalBox");
 
-
-/* =========================================================
-   State
-========================================================= */
-
-const state = {
-
-  formula: [],
-
-  current: "",
-
-  isCalculated: false,
-
-
-  reset() {
-
-    this.formula = [];
-
-    this.current = "";
-
-    this.isCalculated = false;
-
-  },
-
-
-  execute() {
-
-    const tokens =
-      [...this.formula];
-
-
-    if (
-      this.current !== "" &&
-      this.current !== "-"
-    ) {
-
-      tokens.push(
-        this.current
-      );
-
+const state={
+  formula:[],
+  current:"",
+  isCalculated:false,
+  reset(){this.formula=[];this.current="";this.isCalculated=false},
+  execute(){
+    const t=this.formula.slice();
+    if(this.current!==""&&this.current!=="-")t.push(this.current);
+    while(t.length&&OPS.has(t[t.length-1]))t.pop();
+    if(!t.length)return 0;
+    let r=parseFloat(t[0]);
+    for(let i=1;i<t.length;i+=2){
+      const op=t[i],v=parseFloat(t[i+1]);
+      if(Number.isNaN(v))continue;
+      if(op==="+")r+=v;
+      else if(op==="-")r-=v;
+      else if(op==="*")r*=v;
+      else if(op==="/")r=v?r/v:0;
     }
-
-
-    while (
-      tokens.length &&
-      OPS.has(
-        tokens[tokens.length - 1]
-      )
-    ) {
-
-      tokens.pop();
-
-    }
-
-
-    if (!tokens.length) {
-
-      return 0;
-
-    }
-
-
-    let res =
-      parseFloat(tokens[0]);
-
-
-    for (
-      let i = 1;
-      i < tokens.length;
-      i += 2
-    ) {
-
-      const op =
-        tokens[i];
-
-      const v =
-        parseFloat(
-          tokens[i + 1]
-        );
-
-
-      if (isNaN(v)) {
-
-        continue;
-
-      }
-
-
-      if (op === "+") {
-
-        res += v;
-
-      }
-      else if (op === "-") {
-
-        res -= v;
-
-      }
-      else if (op === "*") {
-
-        res *= v;
-
-      }
-      else if (op === "/") {
-
-        res =
-          v
-            ? res / v
-            : 0;
-
-      }
-
-    }
-
-
-    return parseFloat(
-      res.toPrecision(12)
-    );
-
+    return parseFloat(r.toPrecision(12));
   }
-
 };
 
+let historyData=[];
+let inputItem=null;
 
-/* =========================================================
-   UI
-========================================================= */
-
-const historyEl =
-  document.getElementById(
-    "history"
-  );
-
-const totalText =
-  document.getElementById(
-    "totalText"
-  );
-
-const flash =
-  document.getElementById(
-    "flash"
-  );
-
-
-/* =========================================================
-   履歴をメモリ上で管理
-========================================================= */
-
-let historyData = [];
-
-
-/*
-  現在入力中の行
-  DOM全体を検索しないために参照を保持
-*/
-
-let inputItem = null;
-
-
-/* =========================================================
-   Format
-========================================================= */
-
-function format(n) {
-
-  if (
-    n === "-" ||
-    n === "" ||
-    n == null
-  ) {
-
-    return n;
-
+function format(n){
+  if(n===""||n==null)return n;
+  const s=String(n);
+  if(s.includes("e"))return s;
+  const p=s.split(".");
+  return Number(p[0]).toLocaleString("ja-JP")+(p[1]!==undefined?"."+p[1]:"");
+}
+function toSymbol(s){return s.replace(/\*/g,"×").replace(/\//g,"÷")}
+function exprString(){
+  return state.formula.map(t=>OPS.has(t)?toSymbol(t):format(t)).join("")+format(state.current);
+}
+function calculateTotal(){
+  let sum=0;
+  for(const text of historyData){
+    const i=text.lastIndexOf("=");
+    const v=i>=0?text.slice(i+1):text;
+    sum+=parseFloat(v.replace(/,/g,""))||0;
   }
-
-
-  const s =
-    String(n);
-
-
-  if (
-    s.includes("e")
-  ) {
-
-    return s;
-
-  }
-
-
-  const [
-    int,
-    dec
-  ] =
-    s.split(".");
-
-
-  if (
-    dec !== undefined
-  ) {
-
-    return (
-      Number(int)
-        .toLocaleString("ja-JP")
-      +
-      "." +
-      dec
-    );
-
-  }
-
-
-  return Number(int)
-    .toLocaleString("ja-JP");
-
+  return parseFloat(sum.toPrecision(12));
 }
+function updateTotal(){totalText.textContent="合計: "+format(calculateTotal())}
+function scrollBottom(){historyEl.scrollTop=historyEl.scrollHeight}
 
+function createItem(text,isFinal){
+  const item=document.createElement("div");
+  item.className="history-item";
+  item.dataset.type=isFinal?"history":"input";
 
-/* =========================================================
-   記号変換
-========================================================= */
+  const del=document.createElement("div");
+  del.className="delete-label";
+  del.textContent="削除";
 
-function toSymbol(s) {
+  const content=document.createElement("div");
+  content.className="history-content";
 
-  return s
-    .replace(/\*/g, "×")
-    .replace(/\//g, "÷");
+  const textEl=document.createElement("span");
+  textEl.className="text";
+  textEl.textContent=text;
 
-}
+  content.appendChild(textEl);
+  item.append(del,content);
 
-
-/* =========================================================
-   現在の式
-========================================================= */
-
-function exprString() {
-
-  return (
-    state.formula
-
-      .map(
-        t =>
-          OPS.has(t)
-            ? toSymbol(t)
-            : format(t)
-      )
-
-      .join("")
-
-    +
-    format(
-      state.current
-    )
-  );
-
-}
-
-
-/* =========================================================
-   合計計算
-   DOM検索をしない
-========================================================= */
-
-function calculateTotal() {
-
-  let sum = 0;
-
-
-  for (
-    const text of historyData
-  ) {
-
-    const equalIndex =
-      text.lastIndexOf("=");
-
-
-    const value =
-      equalIndex >= 0
-
-        ? text.slice(
-            equalIndex + 1
-          )
-
-        : text;
-
-
-    sum +=
-      parseFloat(
-        value.replace(
-          /,/g,
-          ""
-        )
-      ) || 0;
-
-  }
-
-
-  return parseFloat(
-    sum.toPrecision(12)
-  );
-
-}
-
-
-/* =========================================================
-   合計表示
-========================================================= */
-
-function updateTotal() {
-
-  const total =
-    calculateTotal();
-
-
-  totalText.textContent =
-    "合計: " +
-    format(total);
-
-}
-
-
-/* =========================================================
-   スクロール
-========================================================= */
-
-function scrollBottom() {
-
-  historyEl.scrollTop =
-    historyEl.scrollHeight;
-
-}
-
-
-/* =========================================================
-   履歴アイテム生成
-========================================================= */
-
-function createItem(
-  text,
-  isFinal
-) {
-
-  const item =
-    document.createElement(
-      "div"
-    );
-
-
-  item.className =
-    "history-item";
-
-
-  item.dataset.type =
-    isFinal
-      ? "history"
-      : "input";
-
-
-  const deleteLabel =
-    document.createElement(
-      "div"
-    );
-
-
-  deleteLabel.className =
-    "delete-label";
-
-
-  deleteLabel.textContent =
-    "削除";
-
-
-  const content =
-    document.createElement(
-      "div"
-    );
-
-
-  content.className =
-    "history-content";
-
-
-  const textEl =
-    document.createElement(
-      "span"
-    );
-
-
-  textEl.className =
-    "text";
-
-
-  textEl.textContent =
-    text;
-
-
-  content.appendChild(
-    textEl
-  );
-
-
-  item.appendChild(
-    deleteLabel
-  );
-
-
-  item.appendChild(
-    content
-  );
-
-
+  item._textEl=textEl;
+  item._contentEl=content;
   return item;
-
 }
 
-
-/* =========================================================
-   入力欄表示
-========================================================= */
-
-function renderInput() {
-
-  if (!inputItem) {
-
-    inputItem =
-      createItem(
-        "",
-        false
-      );
-
-    historyEl.appendChild(
-      inputItem
-    );
-
+function renderInput(scroll=true){
+  if(!inputItem){
+    inputItem=createItem("",false);
+    historyEl.appendChild(inputItem);
   }
-
-
-  const textEl =
-    inputItem.querySelector(
-      ".text"
-    );
-
-
-  textEl.textContent =
-    exprString() || "0";
-
-
-  scrollBottom();
-
+  inputItem._textEl.textContent=exprString()||"0";
+  if(scroll)scrollBottom();
 }
 
+function saveHistory(){
+  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(historyData))}
+  catch(e){console.warn("履歴保存に失敗しました",e)}
+}
 
-/* =========================================================
-   計算確定
-========================================================= */
+function loadHistory(){
+  let saved=[];
+  try{
+    const raw=localStorage.getItem(STORAGE_KEY);
+    const parsed=raw?JSON.parse(raw):[];
+    if(Array.isArray(parsed))saved=parsed.filter(x=>typeof x==="string");
+  }catch(e){console.warn("履歴読み込みに失敗しました",e)}
 
-function finalize(
-  expr,
-  res,
-  omitEqual
-) {
+  historyData=saved;
 
-  if (!inputItem) {
+  const fragment=document.createDocumentFragment();
+  for(const text of historyData)fragment.appendChild(createItem(text,true));
 
-    return;
+  inputItem=createItem("",false);
+  fragment.appendChild(inputItem);
+  historyEl.replaceChildren(fragment);
 
-  }
-
-
-  inputItem.dataset.type =
-    "history";
-
-
-  const resultText =
-    omitEqual
-
-      ? format(res)
-
-      : `${expr}=${format(res)}`;
-
-
-  inputItem
-    .querySelector(".text")
-    .textContent =
-      resultText;
-
-
-  historyData.push(
-    resultText
-  );
-
-
-  /*
-    次の入力用に
-    inputItemを一旦nullにする
-  */
-
-  inputItem = null;
-
-
+  inputItem._textEl.textContent=exprString()||"0";
   updateTotal();
-
-
   scrollBottom();
-
 }
 
-
-/* =========================================================
-   保存
-========================================================= */
-
-function saveHistory() {
-
-  try {
-
-    localStorage.setItem(
-      "calcHistory",
-      JSON.stringify(
-        historyData
-      )
-    );
-
-  }
-  catch (error) {
-
-    console.warn(
-      "履歴保存に失敗しました",
-      error
-    );
-
-  }
-
+function finalize(expr,res,omitEqual){
+  if(!inputItem)return;
+  const resultText=omitEqual?format(res):`${expr}=${format(res)}`;
+  inputItem.dataset.type="history";
+  inputItem._textEl.textContent=resultText;
+  historyData.push(resultText);
+  inputItem=null;
+  updateTotal();
+  scrollBottom();
+  saveHistory();
 }
 
+function handleInput(val){
+  if(state.isCalculated&&!Number.isNaN(Number(val)))state.reset();
+  state.isCalculated=false;
 
-/* =========================================================
-   履歴読み込み
-========================================================= */
-
-function loadHistory() {
-
-  try {
-
-    const saved =
-      JSON.parse(
-        localStorage.getItem(
-          "calcHistory"
-        ) || "[]"
-      );
-
-
-    if (
-      !Array.isArray(saved)
-    ) {
-
-      return;
-
-    }
-
-
-    historyData =
-      saved.filter(
-        item =>
-          typeof item ===
-          "string"
-      );
-
-
-    if (
-      !historyData.length
-    ) {
-
-      return;
-
-    }
-
-
-    /*
-      一度のDOM更新で
-      履歴をまとめて追加
-    */
-
-    const fragment =
-      document.createDocumentFragment();
-
-
-    for (
-      const text of historyData
-    ) {
-
-      fragment.appendChild(
-        createItem(
-          text,
-          true
-        )
-      );
-
-    }
-
-
-    /*
-      既に表示している
-      入力欄があれば一旦外す
-    */
-
-    if (inputItem) {
-
-      inputItem.remove();
-
-    }
-
-
-    historyEl.appendChild(
-      fragment
-    );
-
-
-    /*
-      入力欄は履歴の最後
-    */
-
-    inputItem =
-      createItem(
-        "",
-        false
-      );
-
-
-    historyEl.appendChild(
-      inputItem
-    );
-
-
-    updateTotal();
-
-
-    renderInput();
-
-  }
-  catch (error) {
-
-    console.warn(
-      "履歴読み込みに失敗しました",
-      error
-    );
-
-
-    historyData = [];
-
-
-    localStorage.removeItem(
-      "calcHistory"
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   入力処理
-========================================================= */
-
-function handleInput(val) {
-
-
-  /*
-    計算後に数字を押した場合
-    新しい計算を開始
-  */
-
-  if (
-    state.isCalculated &&
-    !isNaN(val)
-  ) {
-
+  if(val==="AC"){
     state.reset();
-
-  }
-
-
-  state.isCalculated =
-    false;
-
-
-  /* =========================
-     AC
-  ========================= */
-
-  if (val === "AC") {
-
-    state.reset();
-
-
-    historyData = [];
-
-
-    historyEl.innerHTML =
-      "";
-
-
-    inputItem = null;
-
-
-    updateTotal();
-
-
+    historyData=[];
+    historyEl.replaceChildren();
+    inputItem=null;
     saveHistory();
-
-
+    updateTotal();
     renderInput();
-
-
     return;
-
   }
 
-
-  /* =========================
-     DEL
-  ========================= */
-
-  else if (val === "DEL") {
-
-    if (
-      state.current
-    ) {
-
-      state.current =
-        state.current.slice(
-          0,
-          -1
-        );
-
-    }
-
-    else if (
-      state.formula.length
-    ) {
-
+  if(val==="DEL"){
+    if(state.current)state.current=state.current.slice(0,-1);
+    else if(state.formula.length){
       state.formula.pop();
-
-
-      state.current =
-        state.formula.pop()
-        || "";
-
+      state.current=state.formula.pop()||"";
     }
-
+    renderInput();
+    return;
   }
 
-
-  /* =========================
-     %
-  ========================= */
-
-  else if (val === "%") {
-
-    if (
-      state.current &&
-      state.current !== "-"
-    ) {
-
-      state.current =
-        String(
-          parseFloat(
-            state.current
-          ) / 100
-        );
-
-    }
-
+  if(val==="%"){
+    if(state.current&&state.current!=="-")state.current=String(parseFloat(state.current)/100);
+    renderInput();
+    return;
   }
 
-
-  /* =========================
-     =
-  ========================= */
-
-  else if (val === "=") {
-
-
-    if (
-      !state.current &&
-      !state.formula.length
-    ) {
-
-      return;
-
-    }
-
-
-    while (
-      state.formula.length &&
-      !state.current &&
-      OPS.has(
-        state.formula[
-          state.formula.length - 1
-        ]
-      )
-    ) {
-
-      state.formula.pop();
-
-    }
-
-
-    const res =
-      state.execute();
-
-
-    const expr =
-      exprString();
-
-
-    const hasOp =
-      state.formula.some(
-        t => OPS.has(t)
-      );
-
-
-    finalize(
-      expr,
-      res,
-      !hasOp
-    );
-
-
-    saveHistory();
-
-
+  if(val==="="){
+    if(!state.current&&!state.formula.length)return;
+    while(state.formula.length&&!state.current&&OPS.has(state.formula[state.formula.length-1]))state.formula.pop();
+    const res=state.execute();
+    const expr=exprString();
+    const hasOp=state.formula.some(t=>OPS.has(t));
+    finalize(expr,res,!hasOp);
     state.reset();
-
-
-    state.isCalculated =
-      true;
-
-
+    state.isCalculated=true;
     return;
-
   }
 
-
-  /* =========================
-     演算子
-  ========================= */
-
-  else if (
-    OPS.has(val)
-  ) {
-
-
-    if (
-      val === "-" &&
-      !state.current &&
-      !state.formula.length
-    ) {
-
-      state.current =
-        "-";
-
-    }
-
-
-    else if (
-      state.current &&
-      state.current !== "-"
-    ) {
-
-      state.formula.push(
-        state.current,
-        val
-      );
-
-
-      state.current =
-        "";
-
-    }
-
-
-    else if (
-      state.formula.length
-    ) {
-
-      state.formula[
-        state.formula.length - 1
-      ] = val;
-
-    }
-
+  if(OPS.has(val)){
+    if(val==="-"&&!state.current&&!state.formula.length)state.current="-";
+    else if(state.current&&state.current!=="-"){state.formula.push(state.current,val);state.current=""}
+    else if(state.formula.length)state.formula[state.formula.length-1]=val;
+    renderInput();
+    return;
   }
 
-
-  /* =========================
-     数字・小数点
-  ========================= */
-
-  else {
-
-    if (
-      val === "." &&
-      state.current.includes(".")
-    ) {
-
-      return;
-
-    }
-
-
-    state.current += val;
-
-  }
-
-
+  if(val==="."&&state.current.includes("."))return;
+  state.current+=val;
   renderInput();
-
 }
 
+let drag=null;
 
-/* =========================================================
-   スワイプ削除
-========================================================= */
+historyEl.addEventListener("touchstart",e=>{
+  const item=e.target.closest('.history-item[data-type="history"]');
+  if(!item)return;
+  drag={el:item,content:item._contentEl,startX:e.touches[0].pageX,currentX:0,isOpen:false};
+  drag.content.style.transition="none";
+},{passive:true});
 
-let drag = null;
+historyEl.addEventListener("touchmove",e=>{
+  if(!drag)return;
+  let diff=e.touches[0].pageX-drag.startX-(drag.isOpen?80:0);
+  diff=Math.min(0,Math.max(-120,diff));
+  drag.currentX=diff;
+  drag.content.style.transform=`translateX(${diff}px)`;
+},{passive:true});
 
+historyEl.addEventListener("touchend",()=>{
+  if(!drag)return;
+  drag.content.style.transition="transform .2s ease-out";
+  if(drag.currentX<-40){drag.content.style.transform="translateX(-80px)";drag.isOpen=true}
+  else{drag.content.style.transform="translateX(0)";drag.isOpen=false}
+  drag=null;
+});
 
-historyEl.addEventListener(
-  "touchstart",
-  e => {
+historyEl.addEventListener("click",e=>{
+  const label=e.target.closest(".delete-label");
+  if(!label)return;
+  const item=label.closest(".history-item");
+  if(!item)return;
 
-    const item =
-      e.target.closest(
-        '.history-item[data-type="history"]'
-      );
+  const text=item._textEl.textContent;
+  const index=historyData.indexOf(text);
+  if(index!==-1)historyData.splice(index,1);
 
+  item.remove();
+  updateTotal();
+  saveHistory();
+});
 
-    if (!item) {
+keypad.addEventListener("pointerdown",e=>{
+  const button=e.target.closest("button");
+  if(!button)return;
+  e.preventDefault();
+  handleInput(button.dataset.val);
+  button.blur();
+});
 
-      return;
-
-    }
-
-
-    drag = {
-
-      el: item,
-
-      content:
-        item.querySelector(
-          ".history-content"
-        ),
-
-      startX:
-        e.touches[0].pageX,
-
-      currentX: 0,
-
-      isOpen: false
-
-    };
-
-
-    drag.content.style.transition =
-      "none";
-
-  },
-  {
-    passive: true
+totalBox.addEventListener("click",()=>{
+  if(!historyData.length)return;
+  const text=historyData.join("\n")+"\n---\n"+totalText.textContent;
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=>{
+      flash.style.animation="none";
+      void flash.offsetHeight;
+      flash.style.animation="flash-animation .4s ease-out";
+    }).catch(()=>{});
   }
-);
-
-
-historyEl.addEventListener(
-  "touchmove",
-  e => {
-
-    if (!drag) {
-
-      return;
-
-    }
-
-
-    let diff =
-      e.touches[0].pageX -
-      drag.startX -
-      (drag.isOpen ? 80 : 0);
-
-
-    diff =
-      Math.min(
-        0,
-        Math.max(
-          -120,
-          diff
-        )
-      );
-
-
-    drag.currentX =
-      diff;
-
-
-    drag.content.style.transform =
-      `translateX(${diff}px)`;
-
-  },
-  {
-    passive: true
-  }
-);
-
-
-historyEl.addEventListener(
-  "touchend",
-  () => {
-
-    if (!drag) {
-
-      return;
-
-    }
-
-
-    drag.content.style.transition =
-      "transform 0.2s ease-out";
-
-
-    if (
-      drag.currentX < -40
-    ) {
-
-      drag.content.style.transform =
-        "translateX(-80px)";
-
-      drag.isOpen =
-        true;
-
-    }
-    else {
-
-      drag.content.style.transform =
-        "translateX(0)";
-
-      drag.isOpen =
-        false;
-
-    }
-
-
-    drag = null;
-
-  }
-);
-
-
-/* =========================================================
-   履歴削除
-========================================================= */
-
-historyEl.addEventListener(
-  "click",
-  e => {
-
-    const label =
-      e.target.closest(
-        ".delete-label"
-      );
-
-
-    if (!label) {
-
-      return;
-
-    }
-
-
-    const item =
-      label.closest(
-        ".history-item"
-      );
-
-
-    if (!item) {
-
-      return;
-
-    }
-
-
-    const text =
-      item.querySelector(
-        ".text"
-      ).textContent;
-
-
-    /*
-      メモリ上の履歴から削除
-    */
-
-    const index =
-      historyData.indexOf(
-        text
-      );
-
-
-    if (index !== -1) {
-
-      historyData.splice(
-        index,
-        1
-      );
-
-    }
-
-
-    item.remove();
-
-
-    updateTotal();
-
-
-    saveHistory();
-
-  }
-);
-
-
-/* =========================================================
-   キーパッド
-========================================================= */
-
-document
-  .getElementById("keypad")
-  .addEventListener(
-    "pointerdown",
-    e => {
-
-      const b =
-        e.target.closest(
-          "button"
-        );
-
-
-      if (!b) {
-
-        return;
-
-      }
-
-
-      e.preventDefault();
-
-
-      handleInput(
-        b.dataset.val
-      );
-
-
-      b.blur();
-
-    }
-  );
-
-
-/* =========================================================
-   合計コピー
-========================================================= */
-
-document
-  .getElementById("totalBox")
-  .addEventListener(
-    "click",
-    () => {
-
-
-      if (
-        !historyData.length
-      ) {
-
-        return;
-
-      }
-
-
-      const text =
-        historyData.join("\n") +
-        "\n---\n" +
-        totalText.textContent;
-
-
-      if (
-        navigator.clipboard &&
-        navigator.clipboard.writeText
-      ) {
-
-        navigator.clipboard
-          .writeText(text)
-          .then(() => {
-
-            flash.style.animation =
-              "none";
-
-
-            void flash.offsetHeight;
-
-
-            flash.style.animation =
-              "flash-animation 0.4s ease-out";
-
-          })
-          .catch(() => {});
-
-      }
-
-    }
-  );
-
-
-/* =========================================================
-   キーボード
-========================================================= */
-
-const keyMap = {
-
-  "0": "0",
-  "1": "1",
-  "2": "2",
-  "3": "3",
-  "4": "4",
-  "5": "5",
-  "6": "6",
-  "7": "7",
-  "8": "8",
-  "9": "9",
-
-  ".": ".",
-
-  "+": "+",
-  "-": "-",
-  "*": "*",
-  "/": "/",
-
-  "%": "%",
-
-  "Enter": "=",
-  "=": "=",
-
-  "Backspace": "DEL",
-  "Escape": "AC"
-
+});
+
+const keyMap={
+  "0":"0","1":"1","2":"2","3":"3","4":"4","5":"5","6":"6","7":"7","8":"8","9":"9",
+  ".":".","+":"+","-":"-","*":"*","/":"/","%":"%","Enter":"=","=":"=",
+  "Backspace":"DEL","Escape":"AC"
 };
+window.addEventListener("keydown",e=>{
+  const value=keyMap[e.key];
+  if(value){e.preventDefault();handleInput(value)}
+});
 
+/* 起動時に履歴を一度だけ復元。setTimeoutによる二重描画は使わない */
+loadHistory();
 
-window.addEventListener(
-  "keydown",
-  e => {
-
-    if (
-      keyMap[e.key]
-    ) {
-
-      e.preventDefault();
-
-
-      handleInput(
-        keyMap[e.key]
-      );
-
-    }
-
-  }
-);
-
-
-/* =========================================================
-   初期表示
-========================================================= */
-
-/*
-  まず入力欄だけ表示。
-  電卓UIをすぐ出す。
-*/
-
-renderInput();
-
-
-/*
-  履歴はブラウザへ処理を返してから
-  復元する。
-
-  これにより、起動直後の
-  電卓表示を優先する。
-*/
-
-setTimeout(
-  () => {
-
-    loadHistory();
-
-  },
-  0
-);
-
-
-/* =========================================================
-   Service Worker
-========================================================= */
-
-if (
-  "serviceWorker" in navigator
-) {
-
-  navigator.serviceWorker
-    .register(
-      "./service-worker.js",
-      {
-        scope: "./"
-      }
-    )
-    .catch(
-      err => {
-
-        console.warn(
-          "Service Worker registration failed:",
-          err
-        );
-
-      }
-    );
-
+/* Service Worker登録は画面の初期処理を邪魔しないようload後 */
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>{
+    navigator.serviceWorker.register("./service-worker.js",{scope:"./"}).catch(()=>{});
+  },{once:true});
 }
-
 </script>
-
 </body>
 </html>
