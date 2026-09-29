@@ -331,50 +331,50 @@ if("serviceWorker" in navigator){
 
 <script>
 (function(){
-  const panel=document.createElement('pre');
-  panel.id='pwaDiag4';
-  panel.style.cssText='position:fixed;left:4px;right:4px;bottom:4px;z-index:2147483647;max-height:48vh;overflow:auto;margin:0;padding:8px;background:rgba(0,0,0,.92);color:#0f0;font:11px/1.35 monospace;white-space:pre-wrap;border:1px solid #0f0;border-radius:6px;display:none;pointer-events:none';
-  document.body.appendChild(panel);
+  const box=document.createElement('div');
+  box.id='diag5box';
+  box.style.cssText='position:fixed;left:4px;right:4px;bottom:4px;z-index:2147483647;background:#111;color:#0f0;border:2px solid #0f0;border-radius:8px;padding:8px;display:none';
+  box.innerHTML='<button id="diag5copy" style="font-size:18px;padding:8px 14px;margin-bottom:6px">診断結果をコピー</button> <button id="diag5close" style="font-size:18px;padding:8px 14px">閉じる</button><textarea id="diag5text" readonly style="display:block;width:100%;height:220px;box-sizing:border-box;background:#000;color:#0f0;font:11px monospace"></textarea>';
+  document.body.appendChild(box);
+  const ta=box.querySelector('#diag5text');
 
-  function rect(r){return {x:+r.x.toFixed(3),y:+r.y.toFixed(3),w:+r.width.toFixed(3),h:+r.height.toFixed(3),top:+r.top.toFixed(3),bottom:+r.bottom.toFixed(3),left:+r.left.toFixed(3),right:+r.right.toFixed(3)}}
-  function styles(el){const s=getComputedStyle(el);return {display:s.display,position:s.position,overflow:s.overflow,overflowX:s.overflowX,overflowY:s.overflowY,padding:s.padding,border:s.border,margin:s.margin,boxSizing:s.boxSizing,contain:s.contain,clipPath:s.clipPath,mask:s.mask,transform:s.transform,willChange:s.willChange,filter:s.filter,isolation:s.isolation,webkitOverflowScrolling:s.webkitOverflowScrolling,backface:s.backfaceVisibility}}
-  function info(el){if(!el)return null;return {tag:el.tagName,id:el.id||'',cls:typeof el.className==='string'?el.className:'',text:(el.textContent||'').trim().replace(/\s+/g,' ').slice(0,80),rect:rect(el.getBoundingClientRect()),styles:styles(el)}}
-  function ancestors(el){const a=[];let n=el,i=0;while(n&&i<10){a.push(info(n));n=n.parentElement;i++}return a}
-  function textRects(el){const out=[];if(!el)return out;const w=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);let n;while(n=w.nextNode()){if(!n.nodeValue.trim())continue;const r=document.createRange();r.selectNodeContents(n);out.push({text:n.nodeValue.trim().slice(0,80),rects:[...r.getClientRects()].map(rect)})}return out}
-  function pointInfo(x,y){const e=document.elementFromPoint(x,y);return {x,y,element:e?{tag:e.tagName,id:e.id||'',cls:typeof e.className==='string'?e.className:'',text:(e.textContent||'').trim().replace(/\s+/g,' ').slice(0,60)}:null}}
-
+  function R(r){return {x:+r.x.toFixed(3),y:+r.y.toFixed(3),w:+r.width.toFixed(3),h:+r.height.toFixed(3),top:+r.top.toFixed(3),bottom:+r.bottom.toFixed(3),left:+r.left.toFixed(3),right:+r.right.toFixed(3)}}
+  function S(e){const s=getComputedStyle(e);return {display:s.display,position:s.position,overflow:s.overflow,overflowX:s.overflowX,overflowY:s.overflowY,padding:s.padding,border:s.border,contain:s.contain,clipPath:s.clipPath,mask:s.mask,transform:s.transform,willChange:s.willChange,webkitOverflowScrolling:s.webkitOverflowScrolling}}
+  function I(e){if(!e)return null;return {tag:e.tagName,id:e.id||'',cls:typeof e.className==='string'?e.className:'',text:(e.textContent||'').trim().replace(/\s+/g,' ').slice(0,80),rect:R(e.getBoundingClientRect()),style:S(e)}}
+  function A(e){let a=[],n=e,i=0;while(n&&i++<8){a.push(I(n));n=n.parentElement}return a}
+  function T(e){if(!e)return[];let o=[],w=document.createTreeWalker(e,NodeFilter.SHOW_TEXT),n;while(n=w.nextNode()){if(!n.nodeValue.trim())continue;let r=document.createRange();r.selectNodeContents(n);o.push({text:n.nodeValue.trim(),rects:[...r.getClientRects()].map(R)})}return o}
   function run(){
-    const h=document.querySelector('.history');
-    const items=h?[...h.querySelectorAll('.history-item')].slice(0,4):[];
-    const contents=h?[...h.querySelectorAll('.history-content')].slice(0,4):[];
-    const texts=h?[...h.querySelectorAll('.history-item .text,.history-content .text')].slice(0,4):[];
-    let s='=== PWA DIAGNOSTIC V4: TOP-EDGE CLIP ===\n';
+    const h=document.querySelector('.history'), items=h?[...h.querySelectorAll('.history-item')].slice(0,4):[], texts=h?[...h.querySelectorAll('.history-item .text,.history-content .text')].slice(0,4):[];
+    let s='=== PWA DIAGNOSTIC V5 ===\n';
     s+='standalone='+matchMedia('(display-mode: standalone)').matches+' navigator.standalone='+!!navigator.standalone+'\n';
     s+='DPR='+devicePixelRatio+' viewport='+innerWidth+'x'+innerHeight+' visual='+(visualViewport?visualViewport.width:0)+'x'+(visualViewport?visualViewport.height:0)+' offsetTop='+(visualViewport?visualViewport.offsetTop:0)+'\n';
-    if(!h){panel.textContent=s+'NO .history FOUND';panel.style.display='block';return}
+    if(!h){s+='NO .history FOUND';ta.value=s;box.style.display='block';return}
     const hr=h.getBoundingClientRect();
-    s+='--- history ---\n'+JSON.stringify(info(h),null,2)+'\n';
-    s+='scrollTop='+h.scrollTop.toFixed(3)+' scrollHeight='+h.scrollHeight+' clientHeight='+h.clientHeight+' scrollWidth='+h.scrollWidth+' clientWidth='+h.clientWidth+'\n';
-    s+='--- first rows / text ranges ---\n';
-    items.forEach((e,i)=>{s+='item'+(i+1)+' '+JSON.stringify(info(e))+'\n  textRanges='+JSON.stringify(textRects(e))+'\n'});
-    contents.forEach((e,i)=>s+='content'+(i+1)+' '+JSON.stringify(info(e))+'\n');
-    texts.forEach((e,i)=>{const r=e.getBoundingClientRect();s+='text'+(i+1)+' '+JSON.stringify(info(e))+'\n  range='+JSON.stringify(textRects(e))+'\n  topFromHistory='+(r.top-hr.top).toFixed(3)+' bottomFromHistory='+(r.bottom-hr.top).toFixed(3)+'\n'});
-    s+='--- ancestor chain of .history ---\n'+JSON.stringify(ancestors(h),null,2)+'\n';
-    s+='--- ancestor chain of first text ---\n'+JSON.stringify(ancestors(texts[0]||items[0]),null,2)+'\n';
-    s+='--- top-edge hit testing ---\n';
+    s+='--- HISTORY ---\n'+JSON.stringify(I(h),null,2)+'\n';
+    s+='scrollTop='+h.scrollTop.toFixed(3)+' scrollHeight='+h.scrollHeight+' clientHeight='+h.clientHeight+'\n';
+    s+='--- ROWS ---\n';
+    items.forEach((e,i)=>s+='item'+(i+1)+' '+JSON.stringify(I(e))+'\n');
+    texts.forEach((e,i)=>{let r=e.getBoundingClientRect();s+='text'+(i+1)+' '+JSON.stringify(I(e))+'\nrange='+JSON.stringify(T(e))+'\nrelativeTop='+(r.top-hr.top).toFixed(3)+'\n'});
+    s+='--- HISTORY ANCESTORS ---\n'+JSON.stringify(A(h),null,2)+'\n';
+    s+='--- FIRST TEXT ANCESTORS ---\n'+JSON.stringify(A(texts[0]||items[0]),null,2)+'\n';
+    s+='--- TOP EDGE HIT TEST ---\n';
     const x=Math.min(hr.right-2,hr.left+8);
-    [0,0.25,0.5,1,1.5,2,3,4,5].forEach(d=>s+=JSON.stringify(pointInfo(x,hr.top+d))+'\n');
-    s+='--- device-pixel positions ---\n';
-    if(texts[0]){const r=texts[0].getBoundingClientRect();s+='history top*dpr='+(hr.top*devicePixelRatio).toFixed(3)+' text top*dpr='+(r.top*devicePixelRatio).toFixed(3)+' text bottom*dpr='+(r.bottom*devicePixelRatio).toFixed(3)+'\n'}
-    s+='--- nearby clipping/compositing ancestors ---\n';
-    let n=h.parentElement,i=0;
-    while(n&&i<6){const st=getComputedStyle(n),rr=n.getBoundingClientRect();if(st.overflow!=='visible'||st.transform!=='none'||st.contain!=='none'||st.clipPath!=='none'||st.mask!=='none'||st.willChange!=='auto')s+=JSON.stringify({tag:n.tagName,id:n.id||'',cls:typeof n.className==='string'?n.className:'',rect:rect(rr),overflow:st.overflow,overflowX:st.overflowX,overflowY:st.overflowY,contain:st.contain,transform:st.transform,clipPath:st.clipPath,mask:st.mask,willChange:st.willChange})+'\n';n=n.parentElement;i++}
-    s+='\nTap 5 times anywhere to refresh. Copy the panel text.\n';
-    panel.textContent=s;panel.style.display='block';
+    [0,.25,.5,1,1.5,2,3,4,5].forEach(d=>{let e=document.elementFromPoint(x,hr.top+d);s+=JSON.stringify({d,element:e?{tag:e.tagName,id:e.id||'',cls:typeof e.className==='string'?e.className:''}:null})+'\n'});
+    if(texts[0]){let r=texts[0].getBoundingClientRect();s+='--- DPR ---\n';s+='historyTop*dpr='+(hr.top*devicePixelRatio).toFixed(3)+' textTop*dpr='+(r.top*devicePixelRatio).toFixed(3)+' textBottom*dpr='+(r.bottom*devicePixelRatio).toFixed(3)+'\n'}
+    ta.value=s;box.style.display='block';
+    ta.scrollTop=0;
   }
 
+  box.querySelector('#diag5copy').onclick=async function(){
+    ta.focus();ta.select();ta.setSelectionRange(0,ta.value.length);
+    try{await navigator.clipboard.writeText(ta.value);this.textContent='コピーしました';}
+    catch(e){try{document.execCommand('copy');this.textContent='コピーしました';}catch(_){this.textContent='選択済み→長押しでコピー';}}
+    setTimeout(()=>this.textContent='診断結果をコピー',1800);
+  };
+  box.querySelector('#diag5close').onclick=()=>box.style.display='none';
+
   let taps=0,last=0;
-  document.addEventListener('click',function(){const now=Date.now();if(now-last>1200)taps=0;last=now;taps++;if(taps>=5){taps=0;setTimeout(run,50)}},true);
+  document.addEventListener('click',function(){let n=Date.now();if(n-last>1200)taps=0;last=n;if(++taps>=5){taps=0;setTimeout(run,50)}},true);
 })();
 </script>
 
