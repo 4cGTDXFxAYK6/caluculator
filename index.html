@@ -328,5 +328,55 @@ if("serviceWorker" in navigator){
   },{once:true});
 }
 </script>
-<style id="diag3-style">#diag3{display:none;position:fixed;z-index:2147483647;left:6px;right:6px;top:6px;bottom:6px;background:#111;color:#fff;border:1px solid #888;border-radius:10px;padding:8px;font:12px/1.35 -apple-system,BlinkMacSystemFont,sans-serif;overflow:auto;white-space:pre-wrap}#diag3 button{font:14px -apple-system,sans-serif;padding:8px 10px;margin:2px;border-radius:7px}</style><div id="diag3"><button id="d3run">再計測</button><button id="d3copy">コピー</button><button id="d3close">閉じる</button><pre id="d3out"></pre></div><script>(function(){'use strict';var p=document.getElementById('diag3'),o=document.getElementById('d3out'),n=0,last=0;function one(e){var r=e.getBoundingClientRect(),c=getComputedStyle(e),t=(e.innerText||e.textContent||'').replace(/\s+/g,' ').trim();return {tag:e.tagName,cls:String(e.className||'').slice(0,100),text:t.slice(0,100),x:+r.x.toFixed(3),y:+r.y.toFixed(3),w:+r.width.toFixed(3),h:+r.height.toFixed(3),font:c.font,fontSize:c.fontSize,lineHeight:c.lineHeight,transform:c.transform,display:c.display,alignItems:c.alignItems,overflow:c.overflow,contain:c.contain}}function run(){var a=[].slice.call(document.querySelectorAll('body *')).filter(function(e){var r=e.getBoundingClientRect(),t=(e.innerText||e.textContent||'').trim();return r.width>100&&r.height>=20&&r.height<=80&&t&&t.length<160});var rows=a.slice(-40).map(one),v=visualViewport,s='=== PWA DIAGNOSTIC V3 ===\n';s+='standalone='+matchMedia('(display-mode: standalone)').matches+' navigator.standalone='+(navigator.standalone===true)+'\n';s+='DPR='+devicePixelRatio+' viewport='+innerWidth+'x'+innerHeight+' visual='+(v?v.width+'x'+v.height:'n/a')+' offsetTop='+(v?v.offsetTop:'n/a')+'\n\n--- candidates ---\n';rows.forEach(function(x,i){s+=(i+1)+': '+JSON.stringify(x)+'\n'});o.textContent=s;window.__d3=s}document.addEventListener('click',function(){var now=Date.now();n=now-last<700?n+1:1;last=now;if(n>=5){n=0;p.style.display='block';run()}},true);document.getElementById('d3run').onclick=run;document.getElementById('d3close').onclick=function(){p.style.display='none'};document.getElementById('d3copy').onclick=function(){if(navigator.clipboard)navigator.clipboard.writeText(window.__d3||'')}})();</script></body>
+
+<script>
+(function(){
+  const panel=document.createElement('pre');
+  panel.id='pwaDiag4';
+  panel.style.cssText='position:fixed;left:4px;right:4px;bottom:4px;z-index:2147483647;max-height:48vh;overflow:auto;margin:0;padding:8px;background:rgba(0,0,0,.92);color:#0f0;font:11px/1.35 monospace;white-space:pre-wrap;border:1px solid #0f0;border-radius:6px;display:none;pointer-events:none';
+  document.body.appendChild(panel);
+
+  function rect(r){return {x:+r.x.toFixed(3),y:+r.y.toFixed(3),w:+r.width.toFixed(3),h:+r.height.toFixed(3),top:+r.top.toFixed(3),bottom:+r.bottom.toFixed(3),left:+r.left.toFixed(3),right:+r.right.toFixed(3)}}
+  function styles(el){const s=getComputedStyle(el);return {display:s.display,position:s.position,overflow:s.overflow,overflowX:s.overflowX,overflowY:s.overflowY,padding:s.padding,border:s.border,margin:s.margin,boxSizing:s.boxSizing,contain:s.contain,clipPath:s.clipPath,mask:s.mask,transform:s.transform,willChange:s.willChange,filter:s.filter,isolation:s.isolation,webkitOverflowScrolling:s.webkitOverflowScrolling,backface:s.backfaceVisibility}}
+  function info(el){if(!el)return null;return {tag:el.tagName,id:el.id||'',cls:typeof el.className==='string'?el.className:'',text:(el.textContent||'').trim().replace(/\s+/g,' ').slice(0,80),rect:rect(el.getBoundingClientRect()),styles:styles(el)}}
+  function ancestors(el){const a=[];let n=el,i=0;while(n&&i<10){a.push(info(n));n=n.parentElement;i++}return a}
+  function textRects(el){const out=[];if(!el)return out;const w=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);let n;while(n=w.nextNode()){if(!n.nodeValue.trim())continue;const r=document.createRange();r.selectNodeContents(n);out.push({text:n.nodeValue.trim().slice(0,80),rects:[...r.getClientRects()].map(rect)})}return out}
+  function pointInfo(x,y){const e=document.elementFromPoint(x,y);return {x,y,element:e?{tag:e.tagName,id:e.id||'',cls:typeof e.className==='string'?e.className:'',text:(e.textContent||'').trim().replace(/\s+/g,' ').slice(0,60)}:null}}
+
+  function run(){
+    const h=document.querySelector('.history');
+    const items=h?[...h.querySelectorAll('.history-item')].slice(0,4):[];
+    const contents=h?[...h.querySelectorAll('.history-content')].slice(0,4):[];
+    const texts=h?[...h.querySelectorAll('.history-item .text,.history-content .text')].slice(0,4):[];
+    let s='=== PWA DIAGNOSTIC V4: TOP-EDGE CLIP ===\n';
+    s+='standalone='+matchMedia('(display-mode: standalone)').matches+' navigator.standalone='+!!navigator.standalone+'\n';
+    s+='DPR='+devicePixelRatio+' viewport='+innerWidth+'x'+innerHeight+' visual='+(visualViewport?visualViewport.width:0)+'x'+(visualViewport?visualViewport.height:0)+' offsetTop='+(visualViewport?visualViewport.offsetTop:0)+'\n';
+    if(!h){panel.textContent=s+'NO .history FOUND';panel.style.display='block';return}
+    const hr=h.getBoundingClientRect();
+    s+='--- history ---\n'+JSON.stringify(info(h),null,2)+'\n';
+    s+='scrollTop='+h.scrollTop.toFixed(3)+' scrollHeight='+h.scrollHeight+' clientHeight='+h.clientHeight+' scrollWidth='+h.scrollWidth+' clientWidth='+h.clientWidth+'\n';
+    s+='--- first rows / text ranges ---\n';
+    items.forEach((e,i)=>{s+='item'+(i+1)+' '+JSON.stringify(info(e))+'\n  textRanges='+JSON.stringify(textRects(e))+'\n'});
+    contents.forEach((e,i)=>s+='content'+(i+1)+' '+JSON.stringify(info(e))+'\n');
+    texts.forEach((e,i)=>{const r=e.getBoundingClientRect();s+='text'+(i+1)+' '+JSON.stringify(info(e))+'\n  range='+JSON.stringify(textRects(e))+'\n  topFromHistory='+(r.top-hr.top).toFixed(3)+' bottomFromHistory='+(r.bottom-hr.top).toFixed(3)+'\n'});
+    s+='--- ancestor chain of .history ---\n'+JSON.stringify(ancestors(h),null,2)+'\n';
+    s+='--- ancestor chain of first text ---\n'+JSON.stringify(ancestors(texts[0]||items[0]),null,2)+'\n';
+    s+='--- top-edge hit testing ---\n';
+    const x=Math.min(hr.right-2,hr.left+8);
+    [0,0.25,0.5,1,1.5,2,3,4,5].forEach(d=>s+=JSON.stringify(pointInfo(x,hr.top+d))+'\n');
+    s+='--- device-pixel positions ---\n';
+    if(texts[0]){const r=texts[0].getBoundingClientRect();s+='history top*dpr='+(hr.top*devicePixelRatio).toFixed(3)+' text top*dpr='+(r.top*devicePixelRatio).toFixed(3)+' text bottom*dpr='+(r.bottom*devicePixelRatio).toFixed(3)+'\n'}
+    s+='--- nearby clipping/compositing ancestors ---\n';
+    let n=h.parentElement,i=0;
+    while(n&&i<6){const st=getComputedStyle(n),rr=n.getBoundingClientRect();if(st.overflow!=='visible'||st.transform!=='none'||st.contain!=='none'||st.clipPath!=='none'||st.mask!=='none'||st.willChange!=='auto')s+=JSON.stringify({tag:n.tagName,id:n.id||'',cls:typeof n.className==='string'?n.className:'',rect:rect(rr),overflow:st.overflow,overflowX:st.overflowX,overflowY:st.overflowY,contain:st.contain,transform:st.transform,clipPath:st.clipPath,mask:st.mask,willChange:st.willChange})+'\n';n=n.parentElement;i++}
+    s+='\nTap 5 times anywhere to refresh. Copy the panel text.\n';
+    panel.textContent=s;panel.style.display='block';
+  }
+
+  let taps=0,last=0;
+  document.addEventListener('click',function(){const now=Date.now();if(now-last>1200)taps=0;last=now;taps++;if(taps>=5){taps=0;setTimeout(run,50)}},true);
+})();
+</script>
+
+</body>
 </html>
