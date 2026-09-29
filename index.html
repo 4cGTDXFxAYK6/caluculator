@@ -19,7 +19,7 @@ body{display:flex;align-items:center;justify-content:center}
 .calculator{width:100%;height:100vh;height:100dvh;display:flex;flex-direction:column;padding:env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);background:var(--bg)}
 .history{background:rgba(255,255,255,.05);color:#fff;flex:1;border-radius:12px;overflow-y:auto;overflow-x:hidden;font-size:22px;margin:4px 10px;scrollbar-width:thin;-webkit-overflow-scrolling:touch;contain:layout paint}
 .history-item{position:relative;background:var(--btn-accent);border-bottom:1px solid rgba(255,255,255,.05);overflow:hidden}
-.history-content{background:#121212;padding:6px 14px;position:relative;z-index:2;transition:transform .2s ease-out;display:flex;align-items:center;min-height:42px}
+.history-content{background:#121212;padding:6px 14px;position:relative;z-index:2;transition:transform .2s ease-out;display:flex;align-items:center;min-height:42px;line-height:28px}
 .text{flex:1;white-space:nowrap;overflow-x:auto;scrollbar-width:none;pointer-events:none}
 .delete-label{position:absolute;right:0;top:0;bottom:0;width:80px;display:flex;align-items:center;justify-content:center;color:#000;font-size:15px;font-weight:bold;z-index:1}
 .side-controls{display:flex;flex-direction:column;flex-shrink:0}
@@ -42,14 +42,6 @@ button:active{filter:brightness(1.6)}
  .op,.equal{font-size:24px}
 }
 @media (orientation:portrait) and (min-height:850px){button{height:85px;font-size:32px}}
-
-/* Diagnostic overlay: hidden and layout-neutral until activated */
-#diagPanel{position:fixed;left:6px;right:6px;top:6px;z-index:99999;display:none;max-height:calc(100dvh - 12px);overflow:auto;background:rgba(0,0,0,.94);color:#fff;border:1px solid #fff;border-radius:10px;padding:10px;font:12px/1.35 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;word-break:break-word;box-shadow:0 4px 20px rgba(0,0,0,.5);}
-#diagPanel.show{display:block}
-#diagPanel button{height:36px;font:600 13px ui-monospace,SFMono-Regular,Menlo,monospace;padding:0 10px;margin:0 6px 8px 0;border-radius:6px;background:#fff;color:#000;}
-#diagPanel .diag-ok{outline:2px solid #0f0;outline-offset:-2px}
-#diagPanel .diag-warn{outline:2px solid #ff9f0a;outline-offset:-2px}
-#diagPanel .diag-bad{outline:2px solid #f33;outline-offset:-2px}
 </style>
 </head>
 <body>
@@ -65,11 +57,6 @@ button:active{filter:brightness(1.6)}
       <button class="zero" data-val="0">0</button><button data-val=".">.</button><button class="equal" data-val="=">=</button>
     </div>
   </div>
-</div>
-
-<div id="diagPanel" aria-hidden="true">
-  <button id="diagRefresh" type="button">更新</button><button id="diagCopy" type="button">診断結果をコピー</button><button id="diagClose" type="button">閉じる</button>
-  <div id="diagText"></div>
 </div>
 
 <script>
@@ -340,131 +327,6 @@ if("serviceWorker" in navigator){
     navigator.serviceWorker.register("./service-worker.js",{scope:"./"}).catch(()=>{});
   },{once:true});
 }
-
-/* PWA rendering diagnostic. */
-const diagPanel=document.getElementById("diagPanel");
-const diagText=document.getElementById("diagText");
-const diagRefresh=document.getElementById("diagRefresh");
-const diagCopy=document.getElementById("diagCopy");
-const diagClose=document.getElementById("diagClose");
-let diagTapTimes=[];
-
-function diagNum(v){return Number.isFinite(v)?v.toFixed(3):String(v)}
-function diagRect(el){
-  if(!el)return null;
-  const r=el.getBoundingClientRect();
-  return {x:r.x,y:r.y,w:r.width,h:r.height,top:r.top,bottom:r.bottom,left:r.left,right:r.right};
-}
-function diagPx(v){return diagNum(v)+"px"}
-function diagMode(){
-  let standalone=false;
-  try{standalone=!!navigator.standalone}catch(e){}
-  let display="unknown";
-  try{display=window.matchMedia("(display-mode: standalone)").matches?"standalone":"browser"}catch(e){}
-  return {navigatorStandalone:standalone,displayMode:display};
-}
-function diagReport(){
-  const vv=window.visualViewport;
-  const root=document.documentElement;
-  const body=document.body;
-  const calc=document.querySelector(".calculator");
-  const hist=historyEl;
-  const items=[...hist.querySelectorAll(":scope > .history-item")];
-  const first=items[0]||null;
-  const second=items[1]||null;
-  const firstText=first?first.querySelector(".text"):null;
-  const secondText=second?second.querySelector(".text"):null;
-  const firstContent=first?first.querySelector(".history-content"):null;
-  const secondContent=second?second.querySelector(".history-content"):null;
-  const csHist=getComputedStyle(hist);
-  const csText=firstText?getComputedStyle(firstText):null;
-  const csContent=firstContent?getComputedStyle(firstContent):null;
-  const mode=diagMode();
-  const safe={
-    top:getComputedStyle(calc).paddingTop,
-    right:getComputedStyle(calc).paddingRight,
-    bottom:getComputedStyle(calc).paddingBottom,
-    left:getComputedStyle(calc).paddingLeft
-  };
-  const firstR=diagRect(first), secondR=diagRect(second), firstTR=diagRect(firstText), secondTR=diagRect(secondText);
-  const report={
-    time:new Date().toISOString(),
-    userAgent:navigator.userAgent,
-    platform:navigator.platform,
-    devicePixelRatio:window.devicePixelRatio,
-    orientation:screen.orientation?screen.orientation.type:"unknown",
-    pwa:mode,
-    viewport:{innerWidth:innerWidth,innerHeight:innerHeight,outerWidth:outerWidth,outerHeight:outerHeight,documentClientWidth:root.clientWidth,documentClientHeight:root.clientHeight},
-    visualViewport:vv?{width:vv.width,height:vv.height,offsetTop:vv.offsetTop,offsetLeft:vv.offsetLeft,pageTop:vv.pageTop,pageLeft:vv.pageLeft,scale:vv.scale}:null,
-    calculator:diagRect(calc),
-    safeArea:safe,
-    history:{rect:diagRect(hist),scrollTop:hist.scrollTop,scrollHeight:hist.scrollHeight,clientHeight:hist.clientHeight,offsetHeight:hist.offsetHeight,scrollWidth:hist.scrollWidth,clientWidth:hist.clientWidth},
-    items:{count:items.length,first: firstR,second:secondR,firstText:firstTR,secondText:secondTR},
-    textStyle:csText?{fontFamily:csText.fontFamily,fontSize:csText.fontSize,lineHeight:csText.lineHeight,fontWeight:csText.fontWeight,transform:csText.transform,letterSpacing:csText.letterSpacing}:null,
-    contentStyle:csContent?{height:csContent.height,minHeight:csContent.minHeight,paddingTop:csContent.paddingTop,paddingBottom:csContent.paddingBottom,display:csContent.display,alignItems:csContent.alignItems,transform:csContent.transform}:null,
-    historyStyle:{overflowY:csHist.overflowY,webkitOverflowScrolling:csHist.webkitOverflowScrolling,contain:csHist.contain,position:csHist.position,transform:csHist.transform,display:csHist.display,flex:csHist.flex}
-  };
-  const delta=firstR&&secondR?firstR.top-secondR.top:null;
-  const firstClip=firstR?Math.max(0,-firstR.top):null;
-  const textClip=firstTR?Math.max(0,-firstTR.top):null;
-  const fractionalScroll=Math.abs(hist.scrollTop-Math.round(hist.scrollTop))>0.001;
-  const fractionalFirstTop=firstTR?Math.abs(firstTR.top-Math.round(firstTR.top))>0.01:false;
-  const lines=[
-    "=== PWA HISTORY DIAGNOSTIC ===",
-    "Tap 5 times on history toggles this panel.",
-    "",
-    "PWA: "+mode.displayMode+" / navigator.standalone="+mode.navigatorStandalone,
-    "DPR: "+window.devicePixelRatio+"  orientation: "+report.orientation,
-    "viewport: "+innerWidth+" x "+innerHeight+"  document: "+root.clientWidth+" x "+root.clientHeight,
-    "visualViewport: "+(vv?vv.width+" x "+vv.height+" offsetTop="+vv.offsetTop+" scale="+vv.scale:"N/A"),
-    "safe-area padding: top="+safe.top+" bottom="+safe.bottom+" left="+safe.left+" right="+safe.right,
-    "",
-    "calculator: "+JSON.stringify(report.calculator),
-    "history rect: "+JSON.stringify(report.history.rect),
-    "history scrollTop="+diagPx(hist.scrollTop)+" clientHeight="+hist.clientHeight+" scrollHeight="+hist.scrollHeight,
-    "",
-    "items="+items.length+"  row delta="+diagPx(delta===null?NaN:delta),
-    "1st row: "+JSON.stringify(firstR),
-    "1st text: "+JSON.stringify(firstTR),
-    "2nd row: "+JSON.stringify(secondR),
-    "2nd text: "+JSON.stringify(secondTR),
-    "",
-    "first row clipped top: "+diagPx(firstClip===null?NaN:firstClip),
-    "first text clipped top: "+diagPx(textClip===null?NaN:textClip),
-    "fractional scrollTop: "+fractionalScroll+" ("+diagPx(hist.scrollTop)+")",
-    "fractional first text top: "+fractionalFirstTop+(firstTR?" ("+diagPx(firstTR.top)+")":""),
-    "",
-    "font: "+(csText?csText.fontFamily:"N/A"),
-    "font-size="+(csText?csText.fontSize:"N/A")+" line-height="+(csText?csText.lineHeight:"N/A")+" weight="+(csText?csText.fontWeight:"N/A"),
-    "history contain="+csHist.contain+" -webkit-overflow-scrolling="+csHist.webkitOverflowScrolling,
-    "content: height="+(csContent?csContent.height:"N/A")+" min-height="+(csContent?csContent.minHeight:"N/A")+" padding="+(csContent?csContent.paddingTop+" / "+csContent.paddingBottom:"N/A"),
-    "",
-    "UA: "+navigator.userAgent
-  ];
-  diagText.textContent=lines.join("\n");
-  diagPanel.classList.remove("diag-ok","diag-warn","diag-bad");
-  if(firstTR&&firstTR.top<0.5)diagPanel.classList.add("diag-bad");
-  else if(fractionalFirstTop||fractionalScroll)diagPanel.classList.add("diag-warn");
-  else diagPanel.classList.add("diag-ok");
-  return report;
-}
-function diagShow(){diagPanel.classList.add("show");diagPanel.setAttribute("aria-hidden","false");diagReport()}
-function diagHide(){diagPanel.classList.remove("show");diagPanel.setAttribute("aria-hidden","true")}
-diagRefresh.addEventListener("click",diagReport);
-diagClose.addEventListener("click",diagHide);
-diagCopy.addEventListener("click",async()=>{
-  try{await navigator.clipboard.writeText(diagText.textContent);diagCopy.textContent="コピー済み";setTimeout(()=>diagCopy.textContent="診断結果をコピー",1200)}
-  catch(e){diagCopy.textContent="コピー不可（長押しで選択）";setTimeout(()=>diagCopy.textContent="診断結果をコピー",1800)}
-});
-historyEl.addEventListener("click",()=>{
-  const now=performance.now();
-  diagTapTimes=diagTapTimes.filter(t=>now-t<1500);
-  diagTapTimes.push(now);
-  if(diagTapTimes.length>=5){diagTapTimes=[];diagPanel.classList.contains("show")?diagHide():diagShow()}
-});
-if(window.visualViewport){window.visualViewport.addEventListener("resize",()=>{if(diagPanel.classList.contains("show"))diagReport()});window.visualViewport.addEventListener("scroll",()=>{if(diagPanel.classList.contains("show"))diagReport()})}
-window.addEventListener("resize",()=>{if(diagPanel.classList.contains("show"))diagReport()});
-
 </script>
 </body>
 </html>
