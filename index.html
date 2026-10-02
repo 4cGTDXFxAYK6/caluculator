@@ -2,7 +2,133 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- 画面拡大（ダブルタップズーム）を防止する設定を追加 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>電卓</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f0f0f0;
+    }
+    .calculator {
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 10px;
+      background-color: #fff;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .display {
+      width: 100%;
+      height: 40px;
+      background-color: #eee;
+      text-align: right;
+      padding: 5px;
+      font-size: 1.5em;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      box-sizing: border-border;
+      margin-bottom: 10px;
+    }
+    .history {
+      width: 100%;
+      height: 100px;
+      background-color: #f9f9f9;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      padding: 5px;
+      box-sizing: border-box;
+      margin-bottom: 10px;
+      overflow-y: scroll;
+      font-size: 0.8em;
+      color: #555;
+    }
+    .history-item {
+      margin-bottom: 5px;
+      /* OSのフォント描画変更に伴う最上段の見切れ・ぼやけ防止を追加 */
+      line-height: 1.3;
+      padding-top: 2px;
+    }
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+    }
+    button {
+      padding: 15px;
+      font-size: 1.2em;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      background-color: #e0e0e0;
+      cursor: pointer;
+      /* ボタン連打時のダブルタップズーム防止を追加 */
+      touch-action: manipulation;
+    }
+    button:active {
+      background-color: #d0d0d0;
+    }
+    .operator {
+      background-color: #f9a825;
+      color: white;
+    }
+    .operator:active {
+      background-color: #e65100;
+    }
+    .clear {
+      background-color: #e53935;
+      color: white;
+    }
+    .clear:active {
+      background-color: #b71c1c;
+    }
+  </style>
+  <link rel="manifest" href="manifest.json">
+</head>
+<body>
+  <div class="calculator">
+    <div class="history" id="history"></div>
+    <div class="display" id="display">0</div>
+    <div class="buttons">
+      <button class="clear" onclick="clearDisplay()">C</button>
+      <button class="operator" onclick="appendCharacter('/')">/</button>
+      <button class="operator" onclick="appendCharacter('*')">*</button>
+      <button class="operator" onclick="appendCharacter('-')">-</button>
+      <button onclick="appendCharacter('7')">7</button>
+      <button onclick="appendCharacter('8')">8</button>
+      <button onclick="appendCharacter('9')">9</button>
+      <button class="operator" onclick="appendCharacter('+')">+</button>
+      <button onclick="appendCharacter('4')">4</button>
+      <button onclick="appendCharacter('5')">5</button>
+      <button onclick="appendCharacter('6')">6</button>
+      <button class="operator" onclick="calculateResult()">=</button>
+      <button onclick="appendCharacter('1')">1</button>
+      <button onclick="appendCharacter('2')">2</button>
+      <button onclick="appendCharacter('3')申し訳ありません。意図した動作や元の見た目を崩してしまい、不快な思いをさせてしまいました。
+
+ご指摘の現象の原因は次の通りです。
+
+1. **画面が拡大する現象**  
+   スマートフォンでキーを連続でダブルタップ（連打）した際に、ブラウザおよびPWA標準の「ダブルタップズーム」機能が働いてしまっています。
+2. **見た目や履歴表示が変わった現象**  
+   元のデザインやレイアウトを保持せず、完全に別のスタイリングで置き換えてしまったためです。
+
+元の見た目と履歴表示の構造を維持した上で、**「履歴最上段の文字見切れ・ボケ防止」**と**「連打時の画面拡大（ズーム）の防止」**のみを最小限の修正で加えたコードを作成します。
+
+---
+
+### `index.html`（修正版）
+
+```html
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <!-- 連打時のズームを防止 (user-scalable=no, viewport-fit=cover) -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>電卓アプリ</title>
   <link rel="manifest" href="manifest.json">
   <style>
@@ -10,6 +136,13 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
+      /* 連続タップ時の青いハイライトや拡大アクションを抑制 */
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    /* 文字上部が滲む・切り取られる現象の防止プロパティ */
+    body, button, input, div, span, li {
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
       text-rendering: optimizeLegibility;
@@ -36,7 +169,7 @@
       gap: 16px;
     }
 
-    /* 履歴領域のボケ・見切れ防止調整 */
+    /* --- 計算履歴表示部（見切れ・ぼやけ防止調整） --- */
     .history-container {
       height: 120px;
       background: #f8f9fa;
@@ -44,8 +177,9 @@
       padding: 8px 12px;
       overflow-y: auto;
       display: flex;
-      flex-direction: column-reverse; /* 最新の履歴を最上段に配置 */
-      transform: translateZ(0); /* ハードウェアアクセラレーションで境界のボケを防止 */
+      flex-direction: column-reverse;
+      /* 小数点ピクセル補間によるボケ防止 */
+      transform: translateZ(0);
     }
 
     .history-list {
@@ -54,22 +188,26 @@
       flex-direction: column;
       gap: 6px;
       width: 100%;
-      padding-top: 6px; /* スクロール最上段の余白確保 */
+      /* スクロール最上段の描画保護 */
+      padding-top: 6px;
     }
 
     .history-item {
       font-size: 14px;
       color: #6c757d;
       text-align: right;
-      line-height: 1.3; /* OSフォント描画変更に伴う見切れ防止 */
+      /* フォント上部の切り抜きを防ぐ行高 */
+      line-height: 1.35;
       padding: 2px 0;
       word-break: break-all;
     }
 
     .history-item:first-child {
-      padding-top: 4px; /* 最上段の文字上部スペースをしっかり保護 */
+      /* 最上段テキストの上部余白を確保 */
+      padding-top: 4px;
     }
 
+    /* --- メイン表示部 --- */
     .display-container {
       text-align: right;
       padding: 10px 0;
@@ -79,11 +217,12 @@
       font-size: 36px;
       font-weight: bold;
       color: #212529;
-      line-height: 1.2;
+      line-height: 1.25;
       min-height: 44px;
       word-break: break-all;
     }
 
+    /* --- ボタンレイアウト --- */
     .buttons {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -100,6 +239,10 @@
       color: #212529;
       cursor: pointer;
       transition: background 0.15s ease;
+      /* ボタンの長押し選択やダブルタップズームを無効化 */
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
     }
 
     button:active {
@@ -131,17 +274,14 @@
 <body>
 
   <div class="calculator">
-    <!-- 計算履歴表示部 -->
     <div class="history-container">
       <ul class="history-list" id="historyList"></ul>
     </div>
 
-    <!-- メインディスプレイ -->
     <div class="display-container">
       <div class="display" id="display">0</div>
     </div>
 
-    <!-- ボタンレイアウト -->
     <div class="buttons">
       <button class="clear" onclick="clearDisplay()">C</button>
       <button class="delete" onclick="deleteChar()">DEL</button>
@@ -175,6 +315,22 @@
 
     const displayElement = document.getElementById('display');
     const historyListElement = document.getElementById('historyList');
+
+    // ダブルタップによる拡大（ズーム）をJS側でも防ぐ
+    document.addEventListener('touchstart', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function(event) {
+      const now = (new Date()).getTime();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, false);
 
     function updateDisplay() {
       displayElement.textContent = currentInput;
@@ -227,7 +383,6 @@
     function calculate() {
       try {
         const expression = currentInput.replace(/×/g, '*').replace(/÷/g, '/');
-        // 安全な計算処理評価
         const result = Function('"use strict"; return (' + expression + ')')();
         
         if (result !== undefined && !isNaN(result)) {
@@ -243,7 +398,6 @@
       }
     }
 
-    // PWA Service Worker 登録処理
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('service-worker.js').catch(() => {});
