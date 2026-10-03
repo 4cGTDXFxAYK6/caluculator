@@ -10,9 +10,7 @@
 
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
-
 <link rel="manifest" href="./manifest.json">
-
 <meta name="theme-color" content="#000000">
 
 <style>
@@ -73,11 +71,12 @@ body{
   -webkit-overflow-scrolling:touch;
 
   contain:none;
-  padding-top:4px;
 
-  transform:translateZ(0);
-  backface-visibility:hidden;
-  -webkit-font-smoothing:antialiased;
+  /* ←ここを追加 */
+  padding-top:8px;
+
+  backface-v*sibility:hidden;
+  -webkit-font-sm*othing:antialiased;
 }
 
 .history-item{
@@ -89,7 +88,6 @@ body{
 
 .history-content{
   background:#121212;
-
   padding:5px 14px;
 
   position:relative;
@@ -101,10 +99,6 @@ body{
   align-items:center;
 
   min-height:34px;
-
-  transform:translateZ(0);
-  backface-visibility:hidden;
-  -webkit-font-smoothing:antialiased;
 }
 
 .text{
@@ -192,8 +186,7 @@ button:active{
   filter:brightness(1.6);
 }
 
-.op,
-.equal{
+.op,.equal{
   background:var(--btn-accent);
   color:#000;
   font-weight:600;
@@ -212,64 +205,59 @@ button:active{
 }
 
 @media (orientation:landscape){
+ .calculator{
+   flex-direction:row;
+   padding:
+     env(safe-area-inset-top)
+     env(safe-area-inset-right)
+     env(safe-area-inset-bottom)
+     env(safe-area-inset-left);
+   gap:10px;
+ }
 
-  .calculator{
-    flex-direction:row;
-    padding:
-      env(safe-area-inset-top)
-      env(safe-area-inset-right)
-      env(safe-area-inset-bottom)
-      env(safe-area-inset-left);
-    gap:10px;
-  }
+ .history{
+   margin:0;
+   height:100%;
+   flex:1 1 55%;
+ }
 
-  .history{
-    margin:0;
-    height:100%;
-    flex:1 1 55%;
-  }
+ .side-controls{
+   width:45%;
+   flex-shrink:0;
+   justify-content:flex-end;
+ }
 
-  .side-controls{
-    width:45%;
-    flex-shrink:0;
-    justify-content:flex-end;
-  }
+ .total-box,.keys{
+   margin:0 0 5px;
+ }
 
-  .total-box,
-  .keys{
-    margin:0 0 5px;
-  }
+ .keys{
+   margin-top:5px;
+ }
 
-  .keys{
-    margin-top:5px;
-  }
+ button{
+   height:12vh;
+   min-height:50px;
+   font-size:22px;
+ }
 
-  button{
-    height:12vh;
-    min-height:50px;
-    font-size:22px;
-  }
-
-  .op,
-  .equal{
-    font-size:24px;
-  }
+ .op,.equal{
+   font-size:24px;
+ }
 }
 
 @media (orientation:portrait) and (min-height:850px){
-  button{
-    height:85px;
-    font-size:32px;
-  }
+ button{
+   height:85px;
+   font-size:32px;
+ }
 }
-
 </style>
 </head>
 
 <body>
 
 <div class="calculator">
-
   <div id="history" class="history"></div>
 
   <div class="side-controls">
@@ -291,8 +279,8 @@ button:active{
       <button data-val="9">9</button>
       <button class="op" data-val="*">×</button>
 
-      <button data-val="4">4</button>
-      <button data-val="5">5</button>
+      <button data*val="4">4</button>
+      <button d*ta-val="5">5</button>
       <button data-val="6">6</button>
       <button class="op" data-val="-">−</button>
 
@@ -306,9 +294,7 @@ button:active{
       <button class="equal" data-val="=">=</button>
 
     </div>
-
   </div>
-
 </div>
 
 <script>
