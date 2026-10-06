@@ -17,9 +17,9 @@
 html,body{height:100%;margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,sans-serif;overflow:hidden}
 body{display:flex;align-items:center;justify-content:center}
 .calculator{width:100%;height:100vh;height:100dvh;display:flex;flex-direction:column;padding:env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);background:var(--bg)}
-.history{background:rgba(255,255,255,.05);color:#fff;flex:1;border-radius:12px;overflow-y:auto;overflow-x:hidden;font-size:22px;margin:14px 10px 4px;scrollbar-width:thin;-webkit-overflow-scrolling:touch;contain:layout paint}
+.history{background:rgba(255,255,255,.05);color:#fff;flex:1;border-radius:12px;overflow-y:auto;overflow-x:hidden;font-size:22px;margin:14px 10px 4px;scrollbar-width:thin;-webkit-overflow-scrolling:touch;contain:layout paint;container-type:size}
 .history-item{position:relative;background:var(--btn-accent);border-bottom:1px solid rgba(255,255,255,.05);overflow:hidden}
-.history-content{background:#121212;padding:6px 14px;position:relative;z-index:2;transition:transform .2s ease-out;display:flex;align-items:center;min-height:42px}
+.history-content{background:#121212;padding:2px 14px;position:relative;z-index:2;transition:transform .2s ease-out;display:flex;align-items:center;min-height:34px;min-height:calc(100cqh / 8 - 1px)}
 .text{flex:1;white-space:nowrap;overflow-x:auto;scrollbar-width:none;pointer-events:none}
 .delete-label{position:absolute;right:0;top:0;bottom:0;width:80px;display:flex;align-items:center;justify-content:center;color:#000;font-size:15px;font-weight:bold;z-index:1}
 .side-controls{display:flex;flex-direction:column;flex-shrink:0}
