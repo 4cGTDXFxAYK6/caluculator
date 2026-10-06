@@ -1,4 +1,4 @@
-const CACHE_VERSION = "v93";
+const CACHE_VERSION = "v95";
 const CACHE_NAME = `calculator-cache-${CACHE_VERSION}`;
 
 const APP_SHELL = [
